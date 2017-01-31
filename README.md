@@ -4,11 +4,38 @@ Object::Base - Multi-threaded base class to establish a class deriving relations
 
 # VERSION
 
-version 1.00
+version 1.01
 
 # ABSTRACT
 
 Multi-threaded base class to establish a class deriving relationship with base classes at compile time
+
+        package Foo;
+        use Object::Base;
+        
+        package Bar;
+        use Object::Base qw('Foo', 'Baz');
+        attributes 'attr1', 'attr2', ':shared';
+
+# DESCRIPTION
+
+Object::Base provides blessed and thread-shared(with :shared attribute) object with in **new** method. **new** method
+can be used as a constructor and overridable in derived classes. **new()** should be called in derived class
+constructors to create and bless self-object. Derived classes own module automatically uses strict, warnings, threads,
+threads::shared with using Object::Base. Import parameters of Object::Base, define parent classes of derived class.
+If none of parent classes derived from Object::Base or any parent isn&#39;t defined, Object::Base is automatically added
+in parent classes.
+
+Attributes define read-write accessors binded value of same named key in objects own hash if attribute names is
+valid subroutine identifiers. Otherwise, attribute is special to get new features into class.
+
+Attributes;
+
+- Lvaluable
+- Inheritable
+- Overridable
+
+Example;
 
         package Foo;
         use Object::Base;
@@ -29,11 +56,11 @@ Multi-threaded base class to establish a class deriving relationship with base c
         $foo->attr1(1);
         print $foo->attr1, "\n"; # prints '1'
         
-        # attributes are also lvaluable
+        # attributes are lvalued
         $foo->attr1++;
         print $foo->attr1, "\n"; # prints '2'
         
-        # class attributes, eg: ':shared'
+        # special attribute ':shared'
         print "\$foo is ", is_shared($foo)? "shared": "not shared", "\n";
         
         # object of derived class Bar
@@ -54,6 +81,7 @@ Multi-threaded base class to establish a class deriving relationship with base c
         # assigning ref values to shared class attributes
         eval { $foo->attr2 = { key1 => 'val1' } }; print $@; # prints error 'Invalid value for shared scalar at ...'
         $foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
+        print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
 # INSTALLATION
 
@@ -72,7 +100,7 @@ from CPAN
 
 This module requires these other modules and libraries:
 
-> There is no dependency for this module.
+- Perl 5.008
 
 # REPOSITORY
 

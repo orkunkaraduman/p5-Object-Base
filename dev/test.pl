@@ -43,11 +43,11 @@ my $foo = Foo->new();
 $foo->attr1(1);
 print $foo->attr1, "\n"; # prints '1'
 
-# attributes are also lvaluable
+# attributes are lvalued
 $foo->attr1++;
 print $foo->attr1, "\n"; # prints '2'
 
-# class attributes, eg: ':shared'
+# special attribute ':shared'
 print "\$foo is ", is_shared($foo)? "shared": "not shared", "\n";
 
 # object of derived class Bar
@@ -68,8 +68,10 @@ print "\$bar is ", is_shared($bar)? "shared": "not shared", "\n"; # prints '$bar
 # assigning ref values to shared class attributes
 eval { $foo->attr2 = { key1 => 'val1' } }; print $@; # prints error 'Invalid value for shared scalar at ...'
 $foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
+print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
 
+say "OK";
 exit 0;
 __END__
 =head1 AUTHOR

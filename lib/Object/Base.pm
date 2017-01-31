@@ -5,11 +5,50 @@ Object::Base - Multi-threaded base class to establish a class deriving relations
 
 =head1 VERSION
 
-version 1.00
+version 1.01
 
 =head1 ABSTRACT
 
 Multi-threaded base class to establish a class deriving relationship with base classes at compile time
+
+	package Foo;
+	use Object::Base;
+	
+	package Bar;
+	use Object::Base qw('Foo', 'Baz');
+	attributes 'attr1', 'attr2', ':shared';
+
+=head1 DESCRIPTION
+
+Object::Base provides blessed and thread-shared(with :shared attribute) object with in B<new> method. B<new> method
+can be used as a constructor and overridable in derived classes. B<new()> should be called in derived class
+constructors to create and bless self-object. Derived classes own module automatically uses strict, warnings, threads,
+threads::shared with using Object::Base. Import parameters of Object::Base, define parent classes of derived class.
+If none of parent classes derived from Object::Base or any parent isn't defined, Object::Base is automatically added
+in parent classes.
+
+Attributes define read-write accessors binded value of same named key in objects own hash if attribute names is
+valid subroutine identifiers. Otherwise, attribute is special to get new features into class.
+
+Attributes;
+
+=over
+
+=item *
+
+Lvaluable
+
+=item *
+
+Inheritable
+
+=item *
+
+Overridable
+
+=back
+
+Example;
 
 	package Foo;
 	use Object::Base;
@@ -30,11 +69,11 @@ Multi-threaded base class to establish a class deriving relationship with base c
 	$foo->attr1(1);
 	print $foo->attr1, "\n"; # prints '1'
 	
-	# attributes are also lvaluable
+	# attributes are lvalued
 	$foo->attr1++;
 	print $foo->attr1, "\n"; # prints '2'
 	
-	# class attributes, eg: ':shared'
+	# special attribute ':shared'
 	print "\$foo is ", is_shared($foo)? "shared": "not shared", "\n";
 	
 	# object of derived class Bar
@@ -55,6 +94,7 @@ Multi-threaded base class to establish a class deriving relationship with base c
 	# assigning ref values to shared class attributes
 	eval { $foo->attr2 = { key1 => 'val1' } }; print $@; # prints error 'Invalid value for shared scalar at ...'
 	$foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
+	print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
 =cut
 use strict;
@@ -67,7 +107,7 @@ use threads::shared;
 BEGIN
 {
 	require 5.008;
-	$Object::Base::VERSION = '1.00';
+	$Object::Base::VERSION = '1.01';
 	$Object::Base::ISA = ();
 }
 
@@ -138,18 +178,18 @@ sub $_(\$) :lvalue
 	my \$self = shift;
 	die 'Attribute $_ is not defined in $caller' if not defined(\$self) or
 		not UNIVERSAL::isa(ref(\$self), '$package') or
-		not \$${caller}::${context}{$_};
+		not \$${caller}::${context}{'$_'};
 	if (\@_ >= 1)
 	{
-		if (ref(\$_[0]))
+		if (ref(\$_[0]) and \$${caller}::${context}{':shared'})
 		{
-			\$self->{$_} = shared_clone(\$_[0]);
+			\$self->{'$_'} = shared_clone(\$_[0]);
 		} else
 		{
-			\$self->{$_} = \$_[0];
+			\$self->{'$_'} = \$_[0];
 		}
 	}
-	return \$self->{$_};
+	return \$self->{'$_'};
 }
 EOF
 		} grep /^[^\W\d]\w*\z/s, keys %{"${caller}::${context}"};
@@ -188,7 +228,9 @@ This module requires these other modules and libraries:
 
 =over
 
-There is no dependency for this module.
+=item *
+
+Perl 5.008
 
 =back
 
