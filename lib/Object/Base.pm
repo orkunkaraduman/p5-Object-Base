@@ -92,6 +92,7 @@ Overridable
 	# assigning ref values to shared class attributes
 	eval { $foo->attr2 = { key1 => 'val1' } }; print $@; # prints error 'Invalid value for shared scalar at ...'
 	$foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
+	print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
 =cut
 use strict;
@@ -175,18 +176,18 @@ sub $_(\$) :lvalue
 	my \$self = shift;
 	die 'Attribute $_ is not defined in $caller' if not defined(\$self) or
 		not UNIVERSAL::isa(ref(\$self), '$package') or
-		not \$${caller}::${context}{$_};
+		not \$${caller}::${context}{'$_'};
 	if (\@_ >= 1)
 	{
-		if (ref(\$_[0]))
+		if (ref(\$_[0]) and \$${caller}::${context}{':shared'})
 		{
-			\$self->{$_} = shared_clone(\$_[0]);
+			\$self->{'$_'} = shared_clone(\$_[0]);
 		} else
 		{
-			\$self->{$_} = \$_[0];
+			\$self->{'$_'} = \$_[0];
 		}
 	}
-	return \$self->{$_};
+	return \$self->{'$_'};
 }
 EOF
 		} grep /^[^\W\d]\w*\z/s, keys %{"${caller}::${context}"};

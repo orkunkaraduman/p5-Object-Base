@@ -68,8 +68,10 @@ print "\$bar is ", is_shared($bar)? "shared": "not shared", "\n"; # prints '$bar
 # assigning ref values to shared class attributes
 eval { $foo->attr2 = { key1 => 'val1' } }; print $@; # prints error 'Invalid value for shared scalar at ...'
 $foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
+print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
 
+say "OK";
 exit 0;
 __END__
 =head1 AUTHOR

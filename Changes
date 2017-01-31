@@ -1,2 +1,5 @@
+1.01	2017-01-31
+		- ':shared' attribute shared_clone fix
+
 1.00	2017-01-31
 		- Object::Base first release
