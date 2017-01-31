@@ -54,11 +54,6 @@ ABSTRACT
             eval { $foo->attr2 = { key1 => 'val1' } }; print $@; # prints error 'Invalid value for shared scalar at ...'
             $foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
 
-DESCRIPTION
-    Base class for Perl objects
-
-    ...
-
 INSTALLATION
     To install this module type the following
 
