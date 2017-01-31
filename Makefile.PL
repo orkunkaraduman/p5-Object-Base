@@ -8,6 +8,7 @@ WriteMakefile(
 	VERSION_FROM		=> 'lib/Object/Base.pm',
 	MIN_PERL_VERSION	=> '5.008',
 	PREREQ_PM			=> {
+		'perl'			=> '5.008',
 	},
 	EXE_FILES			=> [qw(
 	)],
@@ -16,19 +17,19 @@ WriteMakefile(
 	LICENSE				=> 'gpl_3',
 	META_MERGE			=> {
 		'meta-spec' => {
-			version => 2,
+			version		=> 2,
 		},
 		resources => {
-			homepage   => 'https://metacpan.org/release/Object-Base',
-			license    => 'https://www.gnu.org/licenses/gpl-3.0.html',
-			repository => {
-				type => 'git',
-				url => 'git://git@github.com:orkunkaraduman/p5-Object-Base.git',
-				web => 'https://github.com/orkunkaraduman/p5-Object-Base',
+			homepage	=> 'https://metacpan.org/release/Object-Base',
+			license		=> 'https://www.gnu.org/licenses/gpl-3.0.html',
+			repository	=> {
+				type	=> 'git',
+				url		=> 'git://git@github.com:orkunkaraduman/p5-Object-Base.git',
+				web		=> 'https://github.com/orkunkaraduman/p5-Object-Base',
 			},
-			bugtracker => {
-				web    => 'https://github.com/orkunkaraduman/p5-Object-Base/issues',
-				mailto => 'bug-Object-Base@rt.cpan.org',
+			bugtracker	=> {
+				web		=> 'https://github.com/orkunkaraduman/p5-Object-Base/issues',
+				mailto	=> 'bug-Object-Base@rt.cpan.org',
 			},
 		},
 	},

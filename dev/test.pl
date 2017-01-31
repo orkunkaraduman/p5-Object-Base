@@ -43,11 +43,11 @@ my $foo = Foo->new();
 $foo->attr1(1);
 print $foo->attr1, "\n"; # prints '1'
 
-# attributes are also lvaluable
+# attributes are lvalued
 $foo->attr1++;
 print $foo->attr1, "\n"; # prints '2'
 
-# class attributes, eg: ':shared'
+# special attribute ':shared'
 print "\$foo is ", is_shared($foo)? "shared": "not shared", "\n";
 
 # object of derived class Bar
