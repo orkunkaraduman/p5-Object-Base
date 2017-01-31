@@ -48,6 +48,8 @@ Overridable
 
 =back
 
+Example;
+
 	package Foo;
 	use Object::Base;
 	attributes ':shared', 'attr1', 'attr2';

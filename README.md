@@ -35,6 +35,8 @@ Attributes;
 - Inheritable
 - Overridable
 
+Example;
+
         package Foo;
         use Object::Base;
         attributes ':shared', 'attr1', 'attr2';
