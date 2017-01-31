@@ -56,12 +56,6 @@ Multi-threaded base class to establish a class deriving relationship with base c
 	eval { $foo->attr2 = { key1 => 'val1' } }; print $@; # prints error 'Invalid value for shared scalar at ...'
 	$foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
 
-=head1 DESCRIPTION
-
-Base class for Perl objects
-
-...
-
 =cut
 use strict;
 no strict qw(refs);
