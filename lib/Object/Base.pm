@@ -134,7 +134,7 @@ sub import
 		(
 			map {
 				my $p = (defined and not ref)? $_: "";
-				$p and /^[^\W\d]\w*(\:\:[^\W\d]\w*)*\z/s or die "Invalid package name $p";
+				$p and /^[^\W\d]\w*(\:\:[^\W\d]\w*)*\z/s or die "Invalid base-class name $p";
 				<< "EOF";
 eval { require $_ };
 push \@${caller}::ISA, '$_';
@@ -200,6 +200,7 @@ EOF
 sub new
 {
 	my $class = shift;
+	die "Invalid self-class" unless defined($class) and not ref($class) and UNIVERSAL::isa($class, $package);
 	my $self = {};
 	$self = &share($self) if ${"${class}::${context}"}{":shared"};
 	bless $self, $class;
