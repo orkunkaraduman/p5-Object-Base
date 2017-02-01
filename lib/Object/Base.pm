@@ -230,10 +230,6 @@ This module requires these other modules and libraries:
 
 =item *
 
-Perl 5.008
-
-=item *
-
 threads
 
 =item *

@@ -8,7 +8,6 @@ WriteMakefile(
 	VERSION_FROM		=> 'lib/Object/Base.pm',
 	MIN_PERL_VERSION	=> '5.008',
 	PREREQ_PM			=> {
-		'perl'			=> '5.008',
 		'threads'		=> '1.72',
 		'threads::shared' => '1.28',
 	},
