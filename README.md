@@ -100,7 +100,6 @@ from CPAN
 
 This module requires these other modules and libraries:
 
-- Perl 5.008
 - threads
 - threads::shared
 
