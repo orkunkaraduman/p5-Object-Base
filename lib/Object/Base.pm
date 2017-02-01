@@ -201,6 +201,7 @@ sub new
 {
 	my $class = shift;
 	die "Invalid self-class" unless defined($class) and not ref($class) and UNIVERSAL::isa($class, $package);
+	die "$package context is not defined" unless defined(\%{"${class}::${context}"});
 	my $self = {};
 	$self = &share($self) if ${"${class}::${context}"}{":shared"};
 	bless $self, $class;
