@@ -5,7 +5,7 @@ Object::Base - Multi-threaded base class to establish a class deriving relations
 
 =head1 VERSION
 
-version 1.02
+version 1.03
 
 =head1 ABSTRACT
 
@@ -107,7 +107,7 @@ use threads::shared;
 BEGIN
 {
 	require 5.008;
-	$Object::Base::VERSION = '1.02';
+	$Object::Base::VERSION = '1.03';
 	$Object::Base::ISA = ();
 }
 

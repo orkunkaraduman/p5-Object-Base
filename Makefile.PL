@@ -17,7 +17,7 @@ WriteMakefile(
 	ABSTRACT			=> 'Multi-threaded base class to establish a class deriving relationship with base classes',
 	LICENSE				=> 'gpl_3',
 	META_MERGE			=> {
-		'meta-spec' => {
+		'meta-spec'		=> {
 			version		=> 2,
 		},
 		resources => {
