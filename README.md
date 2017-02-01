@@ -1,14 +1,14 @@
 # NAME
 
-Object::Base - Multi-threaded base class to establish a class deriving relationship with base classes at compile time
+Object::Base - Multi-threaded base class to establish a class deriving relationship with base classes
 
 # VERSION
 
-version 1.01
+version 1.02
 
 # ABSTRACT
 
-Multi-threaded base class to establish a class deriving relationship with base classes at compile time
+Multi-threaded base class to establish a class deriving relationship with base classes
 
         package Foo;
         use Object::Base;
@@ -35,7 +35,7 @@ Attributes;
 - Inheritable
 - Overridable
 
-Example;
+Examples;
 
         package Foo;
         use Object::Base;
@@ -73,13 +73,13 @@ Example;
         $bar->attr1(3);
         
         # attributes are overridable #1
-        eval { $bar->attr2 = 4 }; print $@; # prints error 'Attribute attr2 is not defined in Bar at ...'
+        eval { $bar->attr2 = 4 }; print "Eval: $@"; # prints error 'Eval: Attribute attr2 is not defined in Bar at ...'
         
         # attributes are overridable #2
         print "\$bar is ", is_shared($bar)? "shared": "not shared", "\n"; # prints '$bar is not shared'
         
         # assigning ref values to shared class attributes
-        eval { $foo->attr2 = { key1 => 'val1' } }; print $@; # prints error 'Invalid value for shared scalar at ...'
+        eval { $foo->attr2 = { key1 => 'val1' } }; print "Eval: $@"; # prints error 'Eval: Invalid value for shared scalar at ...'
         $foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
         print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
@@ -101,6 +101,8 @@ from CPAN
 This module requires these other modules and libraries:
 
 - Perl 5.008
+- threads
+- threads::shared
 
 # REPOSITORY
 

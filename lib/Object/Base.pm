@@ -1,7 +1,7 @@
 package Object::Base;
 =head1 NAME
 
-Object::Base - Multi-threaded base class to establish a class deriving relationship with base classes at compile time
+Object::Base - Multi-threaded base class to establish a class deriving relationship with base classes
 
 =head1 VERSION
 
@@ -9,7 +9,7 @@ version 1.02
 
 =head1 ABSTRACT
 
-Multi-threaded base class to establish a class deriving relationship with base classes at compile time
+Multi-threaded base class to establish a class deriving relationship with base classes
 
 	package Foo;
 	use Object::Base;
@@ -48,7 +48,7 @@ Overridable
 
 =back
 
-Example;
+Examples;
 
 	package Foo;
 	use Object::Base;
@@ -86,13 +86,13 @@ Example;
 	$bar->attr1(3);
 	
 	# attributes are overridable #1
-	eval { $bar->attr2 = 4 }; print $@; # prints error 'Attribute attr2 is not defined in Bar at ...'
+	eval { $bar->attr2 = 4 }; print "Eval: $@"; # prints error 'Eval: Attribute attr2 is not defined in Bar at ...'
 	
 	# attributes are overridable #2
 	print "\$bar is ", is_shared($bar)? "shared": "not shared", "\n"; # prints '$bar is not shared'
 	
 	# assigning ref values to shared class attributes
-	eval { $foo->attr2 = { key1 => 'val1' } }; print $@; # prints error 'Invalid value for shared scalar at ...'
+	eval { $foo->attr2 = { key1 => 'val1' } }; print "Eval: $@"; # prints error 'Eval: Invalid value for shared scalar at ...'
 	$foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
 	print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
@@ -178,18 +178,18 @@ sub $_(\$) :lvalue
 	my \$self = shift;
 	die 'Attribute $_ is not defined in $caller' if not defined(\$self) or
 		not UNIVERSAL::isa(ref(\$self), '$package') or
-		not \$${caller}::${context}{'$_'};
+		not \$${caller}::${context}{"\Q$_\E"};
 	if (\@_ >= 1)
 	{
 		if (ref(\$_[0]) and \$${caller}::${context}{':shared'})
 		{
-			\$self->{'$_'} = shared_clone(\$_[0]);
+			\$self->{"\Q$_\E"} = shared_clone(\$_[0]);
 		} else
 		{
-			\$self->{'$_'} = \$_[0];
+			\$self->{"\Q$_\E"} = \$_[0];
 		}
 	}
-	return \$self->{'$_'};
+	return \$self->{"\Q$_\E"};
 }
 EOF
 		} grep /^[^\W\d]\w*\z/s, keys %{"${caller}::${context}"};
@@ -231,6 +231,14 @@ This module requires these other modules and libraries:
 =item *
 
 Perl 5.008
+
+=item *
+
+threads
+
+=item *
+
+threads::shared
 
 =back
 
