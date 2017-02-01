@@ -181,7 +181,7 @@ sub $_(\$) :lvalue
 		not \$${caller}::${context}{"\Q$_\E"};
 	if (\@_ >= 1)
 	{
-		if (ref(\$_[0]) and \$${caller}::${context}{':shared'})
+		if (ref(\$_[0]) and not is_shared(\$_[0]) and \$${caller}::${context}{':shared'})
 		{
 			\$self->{"\Q$_\E"} = shared_clone(\$_[0]);
 		} else
