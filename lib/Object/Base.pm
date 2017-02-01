@@ -203,9 +203,45 @@ sub new
 	die "Invalid self-class" unless defined($class) and not ref($class) and UNIVERSAL::isa($class, $package);
 	die "$package context is not defined" unless defined(\%{"${class}::${context}"});
 	my $self = {};
-	$self = &share($self) if ${"${class}::${context}"}{":shared"};
+	my $tied_self = tie %$self, $package, { "context" => { %{"${class}::${context}"} }, "attributes" => {} };
+	$self = shared_clone($self) if ${"${class}::${context}"}{":shared"};
+	$tied_self->{"self"} = $self;
 	bless $self, $class;
-	return $self;
+}
+
+sub TIEHASH
+{
+	my $class = shift;
+	my $self = shift;
+	$self = shared_clone($self) if ${"${class}::${context}"}{":shared"};
+	bless $self, $class;
+}
+
+sub FETCH
+{
+	my $self = shift;
+	my ($key) = @_;
+	$self->{$key};
+}
+
+sub STORE
+{
+	my $self = shift;
+	my ($key, $value) = @_;
+	$self->{$key} = $value;
+	print "key: $key\n";
+}
+
+sub FIRSTKEY
+{
+	my $self = shift;
+	(sort keys %$self)[0];
+}
+
+sub NEXTKEY
+{
+	my $self = shift;
+	(sort keys %$self)[1];
 }
 
 
