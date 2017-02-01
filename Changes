@@ -1,3 +1,7 @@
+1.02	2017-02-01
+		- Attribute name quotemeta fix
+		- Added thread libraries in prerequirements
+
 1.01	2017-01-31
 		- ':shared' attribute shared_clone fix
 
