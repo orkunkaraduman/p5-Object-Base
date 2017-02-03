@@ -212,8 +212,17 @@ sub new
 sub TIEHASH
 {
 	my $class = shift;
-	my $self = { "context" => { %{"${class}::${context}"} } };
-	$self->{"attributes"} = shared_clone({"key_index" => {}, "keys" => [], "values" => {}}) if ${"${class}::${context}"}{":shared"};
+	my $self = { "hash" => { "key_index" => {}, "keys" => [], "values" => {} } };
+=pod
+	for (keys %{"${class}::${context}"})
+	{
+		if (/^[^\W\d]\w*\z/s)
+		{
+			$self->{"values"}->{":$_"} = {};
+		}
+	}
+=cut
+	$self = shared_clone($self) if ${"${class}::${context}"}{":shared"};
 	bless $self, $class;
 }
 
@@ -221,56 +230,61 @@ sub FETCH
 {
 	my $self = shift;
 	my ($key) = @_;
-	$self->{"attributes"}->{"values"}->{$key};
+	$self->{"hash"}->{"values"}->{$key};
+	unless ($self->{"hash"}->{"values"}->{":$key"}->{"wantarray"})
+	{
+		return ;
+	}
 }
 
 sub STORE
 {
 	my $self = shift;
 	my ($key, $value) = @_;
-	unless (exists($self->{"attributes"}->{"key_index"}->{$key}))
+	return if substr($key, 0, 1) == ":";
+	unless (exists($self->{"hash"}->{"key_index"}->{$key}))
 	{
-		push @{$self->{"attributes"}->{"keys"}}, $key;
-		$self->{"attributes"}->{"key_index"}->{$key} = $#{$self->{"attributes"}->{"keys"}};
+		push @{$self->{"hash"}->{"keys"}}, $key;
+		$self->{"hash"}->{"key_index"}->{$key} = $#{$self->{"hash"}->{"keys"}};
 	}
-	$self->{"attributes"}->{"values"}->{$key} = $value;
+	$self->{"hash"}->{"values"}->{$key} = $value;
 }
 
 sub DELETE
 {
 	my $self = shift;
 	my ($key) = @_;
-	delete $self->{"attributes"}->{"keys"}->[$self->{"attributes"}->{"key_index"}->{$key}];
-	%{$self->{"attributes"}->{"key_index"}} = ();
-	@{$self->{"attributes"}->{"key_index"}}{@{$self->{"attributes"}->{"keys"}}} = (0..$#{$self->{"attributes"}->{"keys"}});
-	delete $self->{"attributes"}->{"values"}->{$key};
+	delete $self->{"hash"}->{"keys"}->[$self->{"hash"}->{"key_index"}->{$key}];
+	%{$self->{"hash"}->{"key_index"}} = ();
+	@{$self->{"hash"}->{"key_index"}}{@{$self->{"hash"}->{"keys"}}} = (0..$#{$self->{"hash"}->{"keys"}});
+	delete $self->{"hash"}->{"values"}->{$key};
 }
 
 sub CLEAR
 {
 	my $self = shift;
-	@{$self->{"attributes"}->{"keys"}} = ();
-	%{$self->{"attributes"}->{"key_index"}} = ();
-	%{$self->{"attributes"}->{"values"}} = ();
+	@{$self->{"hash"}->{"keys"}} = ();
+	%{$self->{"hash"}->{"key_index"}} = ();
+	%{$self->{"hash"}->{"values"}} = ();
 }
 
 sub FIRSTKEY
 {
 	my $self = shift;
-	$self->{"attributes"}->{"keys"}->[0];
+	$self->{"hash"}->{"keys"}->[0];
 }
 
 sub NEXTKEY
 {
 	my $self = shift;
 	my ($lastkey) = @_;
-	$self->{"attributes"}->{"keys"}->[$self->{"attributes"}->{"key_index"}->{$lastkey}+1];
+	$self->{"hash"}->{"keys"}->[$self->{"hash"}->{"key_index"}->{$lastkey}+1];
 }
 
 sub SCALAR
 {
 	my $self = shift;
-	scalar %{$self->{"attributes"}->{"values"}};
+	scalar %{$self->{"hash"}->{"values"}};
 }
 
 
