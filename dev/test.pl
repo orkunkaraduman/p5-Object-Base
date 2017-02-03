@@ -68,14 +68,21 @@ print "\$bar is ", is_shared($bar)? "shared": "not shared", "\n"; # prints '$bar
 # assigning ref values to shared class attributes
 eval { $foo->attr2 = { key1 => 'val1' } }; print "Eval: $@"; # prints error 'Eval: Invalid value for shared scalar at ...'
 $foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
-#print $foo->attr2->{key2}, "\n"; # prints 'val2'
+print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
 
-$bar->z = "ssdafsfsdfsd";
-$bar->z(1..3);
+#say $bar->{z};
+#say ref($bar->{z});
+#$bar->z = "ssdafsfsdfsd";
+
+
+
+($bar->z) = (1, 2, 3, 4, 8);
+$bar->z = 5;
+#$bar->z(1..3);
 say Dumper($foo);
 say Dumper($bar);
-say (join ",", $bar->z);
+#say (join ",", $bar->z);
 
 
 say "OK";
