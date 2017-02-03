@@ -71,6 +71,11 @@ $foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
 print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
 
+$bar->attr1 = 1;
+$bar->attr3 = 2;
+my %h = (a => 1, b => 2);
+say scalar %h;
+say scalar %$bar;
 say "OK";
 exit 0;
 __END__

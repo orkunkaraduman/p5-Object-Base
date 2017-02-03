@@ -203,7 +203,7 @@ sub new
 	die "Invalid self-class" unless defined($class) and not ref($class) and UNIVERSAL::isa($class, $package);
 	die "$package context is not defined" unless defined(\%{"${class}::${context}"});
 	my $self = {};
-	my $tied_self = tie %$self, $package, { "context" => { %{"${class}::${context}"} }, "attributes" => {} };
+	my $tied_self = tie %$self, $package;
 	$self = shared_clone($self) if ${"${class}::${context}"}{":shared"};
 	$tied_self->{"self"} = $self;
 	bless $self, $class;
@@ -212,8 +212,8 @@ sub new
 sub TIEHASH
 {
 	my $class = shift;
-	my $self = shift;
-	$self = shared_clone($self) if ${"${class}::${context}"}{":shared"};
+	my $self = { "context" => { %{"${class}::${context}"} } };
+	$self->{"attributes"} = shared_clone({"key_index" => {}, "keys" => [], "values" => {}}) if ${"${class}::${context}"}{":shared"};
 	bless $self, $class;
 }
 
@@ -221,27 +221,57 @@ sub FETCH
 {
 	my $self = shift;
 	my ($key) = @_;
-	$self->{$key};
+	$self->{"attributes"}->{"values"}->{$key};
 }
 
 sub STORE
 {
 	my $self = shift;
 	my ($key, $value) = @_;
-	$self->{$key} = $value;
-	print "key: $key\n";
+	unless (exists($self->{"attributes"}->{"key_index"}->{$key}))
+	{
+		push @{$self->{"attributes"}->{"keys"}}, $key;
+		$self->{"attributes"}->{"key_index"}->{$key} = $#{$self->{"attributes"}->{"keys"}};
+	}
+	$self->{"attributes"}->{"values"}->{$key} = $value;
+}
+
+sub DELETE
+{
+	my $self = shift;
+	my ($key) = @_;
+	delete $self->{"attributes"}->{"keys"}->[$self->{"attributes"}->{"key_index"}->{$key}];
+	delete $self->{"attributes"}->{"key_index"}->{$key};
+	delete $self->{"attributes"}->{"values"}->{$key};
+	#%{$self->{"attributes"}->{"key_index"}} = ();
+	#@{$self->{"attributes"}->{"key_index"}}{@{$self->{"attributes"}->{"keys"}}} = (0..$#{$self->{"attributes"}->{"keys"}});	
+}
+
+sub CLEAR
+{
+	my $self = shift;
+	@{$self->{"attributes"}->{"keys"}} = ();
+	%{$self->{"attributes"}->{"key_index"}} = ();
+	%{$self->{"attributes"}->{"values"}} = ();
 }
 
 sub FIRSTKEY
 {
 	my $self = shift;
-	(sort keys %$self)[0];
+	$self->{"attributes"}->{"keys"}->[0];
 }
 
 sub NEXTKEY
 {
 	my $self = shift;
-	(sort keys %$self)[1];
+	my ($lastkey) = @_;
+	$self->{"attributes"}->{"keys"}->[$self->{"attributes"}->{"key_index"}->{$lastkey}+1];
+}
+
+sub SCALAR
+{
+	my $self = shift;
+	scalar %{$self->{"attributes"}->{"values"}};
 }
 
 
