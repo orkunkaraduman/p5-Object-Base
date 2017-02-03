@@ -213,7 +213,7 @@ sub $_ :lvalue
 	}
 }
 EOF
-		} grep /^[^\W\d]\w*\z/s, keys %{"${caller}::${context}"};
+		} grep { /^[^\W\d]\w*\z/s and not exists(&{"${caller}::$_"}) } keys %{"${caller}::${context}"};
 	die "Failed to generate attributes in $caller: $@" if $@;
 	return 1;
 }
@@ -224,74 +224,48 @@ sub new
 	die "Invalid self-class" unless defined($class) and not ref($class) and UNIVERSAL::isa($class, $package);
 	die "$package context is not defined" unless defined(\%{"${class}::${context}"});
 	my $self = {};
-	my $tied_self = tie %$self, $package;
+	tie %$self, "${package}::TieHash", $class;
 	$self = shared_clone($self) if ${"${class}::${context}"}{":shared"};
-	$tied_self->{"self"} = $self;
 	bless $self, $class;
 }
+
+
+package Object::Base::TieHash;
+use strict;
+no strict qw(refs);
+use warnings;
+use SUPER;
+
+
+BEGIN
+{
+	require 5.008;
+	$Object::Base::TieHash::VERSION = $Object::Base::VERSION;
+	$Object::Base::TieHash::ISA = ('Tie::StdHash');
+}
+
 
 sub TIEHASH
 {
 	my $class = shift;
-	my $self = { "hash" => { "key_index" => {}, "keys" => [], "values" => {} } };
-	$self = shared_clone($self) if ${"${class}::${context}"}{":shared"};
-	bless $self, $class;
+	my ($belongsto) = @_;
+	my $self = $class->SUPER();
+	$self = shared_clone($self) if ${"${belongsto}::${context}"}{":shared"};
+	$self;
 }
 
 sub FETCH
 {
 	my $self = shift;
 	my ($key) = @_;
-	$self->{"hash"}->{"values"}->{$key};
+	$self->{$key};
 }
 
 sub STORE
 {
 	my $self = shift;
 	my ($key, $value) = @_;
-	unless (exists($self->{"hash"}->{"key_index"}->{$key}))
-	{
-		push @{$self->{"hash"}->{"keys"}}, $key;
-		$self->{"hash"}->{"key_index"}->{$key} = $#{$self->{"hash"}->{"keys"}};
-	}
-	$self->{"hash"}->{"values"}->{$key} = $value;
-}
-
-sub DELETE
-{
-	my $self = shift;
-	my ($key) = @_;
-	delete $self->{"hash"}->{"keys"}->[$self->{"hash"}->{"key_index"}->{$key}];
-	%{$self->{"hash"}->{"key_index"}} = ();
-	@{$self->{"hash"}->{"key_index"}}{@{$self->{"hash"}->{"keys"}}} = (0..$#{$self->{"hash"}->{"keys"}});
-	delete $self->{"hash"}->{"values"}->{$key};
-}
-
-sub CLEAR
-{
-	my $self = shift;
-	@{$self->{"hash"}->{"keys"}} = ();
-	%{$self->{"hash"}->{"key_index"}} = ();
-	%{$self->{"hash"}->{"values"}} = ();
-}
-
-sub FIRSTKEY
-{
-	my $self = shift;
-	$self->{"hash"}->{"keys"}->[0];
-}
-
-sub NEXTKEY
-{
-	my $self = shift;
-	my ($lastkey) = @_;
-	$self->{"hash"}->{"keys"}->[$self->{"hash"}->{"key_index"}->{$lastkey}+1];
-}
-
-sub SCALAR
-{
-	my $self = shift;
-	scalar %{$self->{"hash"}->{"values"}};
+	$self->{$key} = $value;
 }
 
 

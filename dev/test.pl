@@ -32,6 +32,8 @@ package Bar;
 use Object::Base 'Foo';
 attributes 'attr3', ':shared' => undef, 'z';
 
+attributes 'attr3';
+
 package main;
 use threads;
 use threads::shared;
@@ -82,7 +84,10 @@ $bar->z = 5;
 #$bar->z(1..3);
 say Dumper($foo);
 say Dumper($bar);
-#say (join ",", $bar->z);
+
+no strict 'refs';
+
+say exists(&{"Foo::attr1"});
 
 
 say "OK";
