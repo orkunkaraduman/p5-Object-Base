@@ -241,10 +241,9 @@ sub DELETE
 	my $self = shift;
 	my ($key) = @_;
 	delete $self->{"attributes"}->{"keys"}->[$self->{"attributes"}->{"key_index"}->{$key}];
-	delete $self->{"attributes"}->{"key_index"}->{$key};
+	%{$self->{"attributes"}->{"key_index"}} = ();
+	@{$self->{"attributes"}->{"key_index"}}{@{$self->{"attributes"}->{"keys"}}} = (0..$#{$self->{"attributes"}->{"keys"}});
 	delete $self->{"attributes"}->{"values"}->{$key};
-	#%{$self->{"attributes"}->{"key_index"}} = ();
-	#@{$self->{"attributes"}->{"key_index"}}{@{$self->{"attributes"}->{"keys"}}} = (0..$#{$self->{"attributes"}->{"keys"}});	
 }
 
 sub CLEAR
