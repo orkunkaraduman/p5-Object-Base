@@ -173,23 +173,28 @@ sub attributes
 		"package $caller;",
 		map {
 			<< "EOF";
-sub $_(\$) :lvalue
+sub $_ :lvalue
 {
 	my \$self = shift;
 	die 'Attribute $_ is not defined in $caller' if not defined(\$self) or
 		not UNIVERSAL::isa(ref(\$self), '$package') or
 		not \$${caller}::${context}{"\Q$_\E"};
-	if (\@_ >= 1)
+	my \$args = 
+	if (\@_ = 1)
 	{
-		if (ref(\$_[0]) and not is_shared(\$_[0]) and \$${caller}::${context}{':shared'})
-		{
-			\$self->{"\Q$_\E"} = shared_clone(\$_[0]);
-		} else
-		{
-			\$self->{"\Q$_\E"} = \$_[0];
-		}
+
+		\$self->{"\Q$_\E"} = \$args;
+	} elsif (\@ > 1)
+	{
+		\$self->{"\Q$_\E"} = shared_clone(\@_) if \$${caller}::${context}{':shared'};
 	}
-	return \$self->{"\Q$_\E"};
+	unless (wantarray)
+	{
+		\$self->{"\Q$_\E"};
+	} else
+	{
+		\$self->{"\Q$_\E"};
+	}
 }
 EOF
 		} grep /^[^\W\d]\w*\z/s, keys %{"${caller}::${context}"};
