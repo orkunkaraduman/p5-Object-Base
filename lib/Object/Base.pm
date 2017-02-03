@@ -179,21 +179,34 @@ sub $_ :lvalue
 	die 'Attribute $_ is not defined in $caller' if not defined(\$self) or
 		not UNIVERSAL::isa(ref(\$self), '$package') or
 		not \$${caller}::${context}{"\Q$_\E"};
-	my \$args = 
-	if (\@_ = 1)
+	my \@args = \@_;
+	if (\@args >= 1)
 	{
-
-		\$self->{"\Q$_\E"} = \$args;
-	} elsif (\@ > 1)
-	{
-		\$self->{"\Q$_\E"} = shared_clone(\@_) if \$${caller}::${context}{':shared'};
+		my \$value;
+		if (\@args == 1)
+		{
+			\$value = \\\$args[0];
+		} elsif (\@args > 1)
+		{
+			\$value = \\\@args;
+		}
+		\$value = shared_clone(\$value) if \$${caller}::${context}{':shared'};
+		\$self->{"\Q$_\E"} = \$value;
 	}
-	unless (wantarray)
+	unless (wantarray())
 	{
-		\$self->{"\Q$_\E"};
+		if (ref(\$self->{"\Q$_\E"}) eq 'ARRAY')
+		{
+			return scalar(\@{\$self->{"\Q$_\E"}});
+		}
+		return \${\$self->{"\Q$_\E"}};
 	} else
 	{
-		\$self->{"\Q$_\E"};
+		if (ref(\$self->{"\Q$_\E"}) eq 'SCALAR')
+		{
+			return (\${\$self->{"\Q$_\E"}});
+		}
+		return \@{\$self->{"\Q$_\E"}};
 	}
 }
 EOF
@@ -218,15 +231,6 @@ sub TIEHASH
 {
 	my $class = shift;
 	my $self = { "hash" => { "key_index" => {}, "keys" => [], "values" => {} } };
-=pod
-	for (keys %{"${class}::${context}"})
-	{
-		if (/^[^\W\d]\w*\z/s)
-		{
-			$self->{"values"}->{":$_"} = {};
-		}
-	}
-=cut
 	$self = shared_clone($self) if ${"${class}::${context}"}{":shared"};
 	bless $self, $class;
 }
@@ -236,17 +240,12 @@ sub FETCH
 	my $self = shift;
 	my ($key) = @_;
 	$self->{"hash"}->{"values"}->{$key};
-	unless ($self->{"hash"}->{"values"}->{":$key"}->{"wantarray"})
-	{
-		return ;
-	}
 }
 
 sub STORE
 {
 	my $self = shift;
 	my ($key, $value) = @_;
-	return if substr($key, 0, 1) == ":";
 	unless (exists($self->{"hash"}->{"key_index"}->{$key}))
 	{
 		push @{$self->{"hash"}->{"keys"}}, $key;
