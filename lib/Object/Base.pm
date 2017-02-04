@@ -182,55 +182,15 @@ sub $_ :lvalue
 	my \@args = \@_;
 	if (\@args >= 1)
 	{
-		my \$value;
-		unless (\$${caller}::${context}{"\Q$_\E"}->{'acceptarray'})
+		unless (ref(\$args[0]) and \$${caller}::${context}{':shared'})
 		{
-			\$value = \\\$args[0];
+			\$self->{"\Q$_\E"} = \$args[0];
 		} else
 		{
-			\$value = \\\@args;
-		}
-		\$value = shared_clone(\$value) if \$${caller}::${context}{':shared'};
-		\$self->{"\Q$_\E"} = \$value;
-	}
-	unless (\$${caller}::${context}{"\Q$_\E"}->{'acceptarray'})
-	{
-		if (ref(\$self->{"\Q$_\E"}) =~ /^ARRAY\$/)
-		{
-			my \$val;
-			\$val = \@{\$self->{"\Q$_\E"}}[0];
-			\$self->{"\Q$_\E"} = \\\$val;
-		}
-		if (ref(\$self->{"\Q$_\E"}) =~ /^SCALAR|REF\$/ or not defined(\$self->{"\Q$_\E"}))
-		{
-			if (wantarray)
-			{
-				return (\${\$self->{"\Q$_\E"}});
-			} else
-			{
-				return \${\$self->{"\Q$_\E"}};
-			}
-		}
-	} else
-	{
-		if (ref(\$self->{"\Q$_\E"}) =~ /^SCALAR|REF\$/)
-		{
-			my \@val;
-			\@val = (\${\$self->{"\Q$_\E"}});
-			\$self->{"\Q$_\E"} = \\\@val;
-		}
-		if (ref(\$self->{"\Q$_\E"}) =~ /^ARRAY\$/ or not defined(\$self->{"\Q$_\E"}))
-		{
-			if (wantarray)
-			{
-				return \@{\$self->{"\Q$_\E"}};
-			} else
-			{
-				return \@{\$self->{"\Q$_\E"}}[0];
-			}
+			\$self->{"\Q$_\E"} = shared_clone(\$args[0]);
 		}
 	}
-	return;
+	\$self->{"\Q$_\E"};
 }
 EOF
 		} grep { /^[^\W\d]\w*\z/s and not exists(&{"${caller}::$_"}) } keys %{"${caller}::${context}"};
