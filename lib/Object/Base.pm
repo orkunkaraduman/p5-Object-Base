@@ -205,7 +205,6 @@ sub $_ :lvalue
 		{
 			if (wantarray)
 			{
-				print "aaa\n";
 				return (\${\$self->{"\Q$_\E"}});
 			} else
 			{
