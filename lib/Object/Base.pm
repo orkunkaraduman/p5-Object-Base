@@ -173,26 +173,67 @@ sub attributes
 		"package $caller;",
 		map {
 			<< "EOF";
-sub $_(\$) :lvalue
+sub $_ :lvalue
 {
 	my \$self = shift;
 	die 'Attribute $_ is not defined in $caller' if not defined(\$self) or
 		not UNIVERSAL::isa(ref(\$self), '$package') or
 		not \$${caller}::${context}{"\Q$_\E"};
-	if (\@_ >= 1)
+	my \@args = \@_;
+	if (\@args >= 1)
 	{
-		if (ref(\$_[0]) and not is_shared(\$_[0]) and \$${caller}::${context}{':shared'})
+		my \$value;
+		unless (\$${caller}::${context}{"\Q$_\E"}->{'acceptarray'})
 		{
-			\$self->{"\Q$_\E"} = shared_clone(\$_[0]);
+			\$value = \\\$args[0];
 		} else
 		{
-			\$self->{"\Q$_\E"} = \$_[0];
+			\$value = \\\@args;
+		}
+		\$value = shared_clone(\$value) if \$${caller}::${context}{':shared'};
+		\$self->{"\Q$_\E"} = \$value;
+	}
+	unless (\$${caller}::${context}{"\Q$_\E"}->{'acceptarray'})
+	{
+		if (ref(\$self->{"\Q$_\E"}) =~ /^ARRAY\$/)
+		{
+			my \$val;
+			\$val = \@{\$self->{"\Q$_\E"}}[0];
+			\$self->{"\Q$_\E"} = \\\$val;
+		}
+		if (ref(\$self->{"\Q$_\E"}) =~ /^SCALAR|REF\$/ or not defined(\$self->{"\Q$_\E"}))
+		{
+			if (wantarray)
+			{
+				return (\${\$self->{"\Q$_\E"}});
+			} else
+			{
+				return \${\$self->{"\Q$_\E"}};
+			}
+		}
+	} else
+	{
+		if (ref(\$self->{"\Q$_\E"}) =~ /^SCALAR|REF\$/)
+		{
+			my \@val;
+			\@val = (\${\$self->{"\Q$_\E"}});
+			\$self->{"\Q$_\E"} = \\\@val;
+		}
+		if (ref(\$self->{"\Q$_\E"}) =~ /^ARRAY\$/ or not defined(\$self->{"\Q$_\E"}))
+		{
+			if (wantarray)
+			{
+				return \@{\$self->{"\Q$_\E"}};
+			} else
+			{
+				return \@{\$self->{"\Q$_\E"}}[0];
+			}
 		}
 	}
-	return \$self->{"\Q$_\E"};
+	return;
 }
 EOF
-		} grep /^[^\W\d]\w*\z/s, keys %{"${caller}::${context}"};
+		} grep { /^[^\W\d]\w*\z/s and not exists(&{"${caller}::$_"}) } keys %{"${caller}::${context}"};
 	die "Failed to generate attributes in $caller: $@" if $@;
 	return 1;
 }
@@ -203,9 +244,50 @@ sub new
 	die "Invalid self-class" unless defined($class) and not ref($class) and UNIVERSAL::isa($class, $package);
 	die "$package context is not defined" unless defined(\%{"${class}::${context}"});
 	my $self = {};
-	$self = &share($self) if ${"${class}::${context}"}{":shared"};
+	tie %$self, "${package}::TieHash", $class;
+	$self = shared_clone($self) if ${"${class}::${context}"}{":shared"};
 	bless $self, $class;
-	return $self;
+}
+
+
+package Object::Base::TieHash;
+use strict;
+no strict qw(refs);
+use warnings;
+use threads;
+use threads::shared;
+use SUPER;
+
+
+BEGIN
+{
+	require 5.008;
+	$Object::Base::TieHash::VERSION = $Object::Base::VERSION;
+	$Object::Base::TieHash::ISA = ('Tie::StdHash');
+}
+
+
+sub TIEHASH
+{
+	my $class = shift;
+	my ($belongsto) = @_;
+	my $self = $class->SUPER();
+	$self = shared_clone($self) if ${"${belongsto}::${context}"}{":shared"};
+	$self;
+}
+
+sub FETCH
+{
+	my $self = shift;
+	my ($key) = @_;
+	$self->{$key};
+}
+
+sub STORE
+{
+	my $self = shift;
+	my ($key, $value) = @_;
+	$self->{$key} = $value;
 }
 
 
