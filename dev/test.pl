@@ -26,11 +26,11 @@ use lib "${FindBin::Bin}/../lib";
 
 package Foo;
 use Object::Base;
-attributes ':shared' => {}, 'attr1' => { array => 1 }, 'attr2';
+attributes ':shared', 'attr1', 'attr2';
 
 package Bar;
 use Object::Base 'Foo';
-attributes 'attr3', ':shared' => undef, 'attr2' => undef, 'test' => { 'array' => 1 };
+attributes 'attr3', ':shared' => undef, 'attr2' => undef;
 
 package main;
 use threads;
@@ -40,7 +40,6 @@ use threads::shared;
 my $foo = Foo->new();
 
 # usage of attribute
-say "a";
 $foo->attr1(1);
 print $foo->attr1, "\n"; # prints '1'
 
@@ -71,12 +70,6 @@ eval { $foo->attr2 = { key1 => 'val1' } }; print "Eval: $@"; # prints error 'Eva
 $foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
 print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
-
-my @a = (1..5);
-($bar->test) = 7;
-
-say Dumper($bar);
-#say Dumper(\@a);
 
 say "OK";
 exit 0;
