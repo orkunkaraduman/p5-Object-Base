@@ -26,13 +26,11 @@ use lib "${FindBin::Bin}/../lib";
 
 package Foo;
 use Object::Base;
-attributes ':shared' => undef, 'attr1', 'attr2';
+attributes ':shared', 'attr1', 'attr2';
 
 package Bar;
 use Object::Base 'Foo';
-attributes 'attr3', ':shared' => undef, 'z';
-
-attributes 'attr3';
+attributes 'attr3', ':shared' => undef, 'attr2' => undef;
 
 package main;
 use threads;
@@ -71,23 +69,6 @@ print "\$bar is ", is_shared($bar)? "shared": "not shared", "\n"; # prints '$bar
 eval { $foo->attr2 = { key1 => 'val1' } }; print "Eval: $@"; # prints error 'Eval: Invalid value for shared scalar at ...'
 $foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
 print $foo->attr2->{key2}, "\n"; # prints 'val2'
-
-
-#say $bar->{z};
-#say ref($bar->{z});
-#$bar->z = "ssdafsfsdfsd";
-
-
-
-($bar->z) = (1, 2, 3, 4, 8);
-$bar->z = 5;
-#$bar->z(1..3);
-say Dumper($foo);
-say Dumper($bar);
-
-no strict 'refs';
-
-say exists(&{"Foo::attr1"});
 
 
 say "OK";

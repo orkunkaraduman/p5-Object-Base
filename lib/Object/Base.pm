@@ -234,6 +234,8 @@ package Object::Base::TieHash;
 use strict;
 no strict qw(refs);
 use warnings;
+use threads;
+use threads::shared;
 use SUPER;
 
 
