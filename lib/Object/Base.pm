@@ -256,38 +256,52 @@ no strict qw(refs);
 use warnings;
 use threads;
 use threads::shared;
-use SUPER;
 
 
 BEGIN
 {
 	require 5.008;
 	$Object::Base::TieHash::VERSION = $Object::Base::VERSION;
-	$Object::Base::TieHash::ISA = ('Tie::StdHash');
 }
 
 
 sub TIEHASH
 {
 	my $class = shift;
-	my ($belongsto) = @_;
-	my $self = $class->SUPER();
-	$self = shared_clone($self) if ${"${belongsto}::${context}"}{":shared"};
+	my $self = bless [{}, @_], $class;
+	$self = shared_clone($self) if ${"$_[0]::${context}"}{":shared"};
 	$self;
-}
-
-sub FETCH
-{
-	my $self = shift;
-	my ($key) = @_;
-	$self->{$key};
 }
 
 sub STORE
 {
+	$_[0][0]{$_[1]} = $_[2]
+}
+
+sub FETCH
+{
+	$_[0][0]{$_[1]}
+}
+
+sub FIRSTKEY { my $a = scalar keys %{$_[0][0]}; each %{$_[0][0]} }
+sub NEXTKEY  { each %{$_[0][0]} }
+sub EXISTS   { exists $_[0][0]->{$_[1]} }
+sub DELETE   { delete $_[0][0]->{$_[1]} }
+sub CLEAR    { %{$_[0][0]} = () }
+sub SCALAR   { scalar %{$_[0][0]} }
+
+sub def
+{
 	my $self = shift;
-	my ($key, $value) = @_;
-	$self->{$key} = $value;
+	my $hash = $self->[0];
+	my $top = $self->[1];
+	my ($key) = @_;
+	my $attr = ${"$top::${context}"}{$key};
+	if (exists($attr->{"default"}))
+	{
+		my $default = $attr->{"default"};
+
+	}
 }
 
 
