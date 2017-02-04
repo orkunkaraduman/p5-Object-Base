@@ -30,7 +30,7 @@ attributes ':shared', 'attr1', 'attr2';
 
 package Bar;
 use Object::Base 'Foo';
-attributes 'attr3', ':shared' => undef, 'attr2' => undef;
+attributes 'attr3', ':shared' => undef, 'attr2' => undef, 'test';
 
 package main;
 use threads;
@@ -70,6 +70,15 @@ eval { $foo->attr2 = { key1 => 'val1' } }; print "Eval: $@"; # prints error 'Eva
 $foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
 print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
+
+#$bar->test = 3;
+my @a = (4..8);
+#($bar->test) = @a;
+#@a = ($bar->test);
+say $bar->test;
+$bar->test = 1;
+say Dumper($bar);
+say Dumper(\@a);
 
 say "OK";
 exit 0;

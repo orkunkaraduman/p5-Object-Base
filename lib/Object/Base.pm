@@ -170,7 +170,9 @@ sub attributes
 		$l = $_;
 	}
 	eval join "\n",
+		"\n",
 		"package $caller;",
+		"\n",
 		map {
 			<< "EOF";
 sub $_ :lvalue
