@@ -170,9 +170,7 @@ sub attributes
 		$l = $_;
 	}
 	eval join "\n",
-		"\n",
 		"package $caller;",
-		"\n",
 		map {
 			<< "EOF";
 sub $_ :lvalue
@@ -185,42 +183,55 @@ sub $_ :lvalue
 	if (\@args >= 1)
 	{
 		my \$value;
-		if (\@args == 1)
+		unless (\$${caller}::${context}{"\Q$_\E"}->{'acceptarray'})
 		{
 			\$value = \\\$args[0];
-		} elsif (\@args > 1)
+		} else
 		{
 			\$value = \\\@args;
 		}
 		\$value = shared_clone(\$value) if \$${caller}::${context}{':shared'};
 		\$self->{"\Q$_\E"} = \$value;
 	}
-	unless (\$${caller}::${context}{"\Q$_\E"}->{'wantarray'})
+	unless (\$${caller}::${context}{"\Q$_\E"}->{'acceptarray'})
 	{
-		my \$val;
-		my \$valref = \\\$val;
-		if (ref(\$self->{"\Q$_\E"}) eq 'SCALAR')
+		if (ref(\$self->{"\Q$_\E"}) =~ /^ARRAY\$/)
 		{
-			\$val = \${\$self->{"\Q$_\E"}};
-		}
-		if (ref(\$self->{"\Q$_\E"}) eq 'ARRAY')
-		{
+			my \$val;
 			\$val = \@{\$self->{"\Q$_\E"}}[0];
+			\$self->{"\Q$_\E"} = \\\$val;
 		}
-		\$valref = shared_clone(\$valref) if \$${caller}::${context}{':shared'};
-		\$self->{"\Q$_\E"} = \$valref;
-		return \${\$self->{"\Q$_\E"}};
-	} elsif (defined(wantarray))
-	{
-		if (ref(\$self->{"\Q$_\E"}) eq 'SCALAR')
+		if (ref(\$self->{"\Q$_\E"}) =~ /^SCALAR|REF\$/ or not defined(\$self->{"\Q$_\E"}))
 		{
-			return (\${\$self->{"\Q$_\E"}});
+			if (wantarray)
+			{
+				print "aaa\n";
+				return (\${\$self->{"\Q$_\E"}});
+			} else
+			{
+				return \${\$self->{"\Q$_\E"}};
+			}
 		}
-		return \@{\$self->{"\Q$_\E"}};
 	} else
 	{
-		return;
+		if (ref(\$self->{"\Q$_\E"}) =~ /^SCALAR|REF\$/)
+		{
+			my \@val;
+			\@val = (\${\$self->{"\Q$_\E"}});
+			\$self->{"\Q$_\E"} = \\\@val;
+		}
+		if (ref(\$self->{"\Q$_\E"}) =~ /^ARRAY\$/ or not defined(\$self->{"\Q$_\E"}))
+		{
+			if (wantarray)
+			{
+				return \@{\$self->{"\Q$_\E"}};
+			} else
+			{
+				return \@{\$self->{"\Q$_\E"}}[0];
+			}
+		}
 	}
+	return;
 }
 EOF
 		} grep { /^[^\W\d]\w*\z/s and not exists(&{"${caller}::$_"}) } keys %{"${caller}::${context}"};
