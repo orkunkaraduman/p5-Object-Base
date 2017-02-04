@@ -195,12 +195,20 @@ sub $_ :lvalue
 		\$value = shared_clone(\$value) if \$${caller}::${context}{':shared'};
 		\$self->{"\Q$_\E"} = \$value;
 	}
-	unless (wantarray)
+	unless (\$${caller}::${context}{"\Q$_\E"}->{'wantarray'})
 	{
+		my \$val;
+		my \$valref = \\\$val;
+		if (ref(\$self->{"\Q$_\E"}) eq 'SCALAR')
+		{
+			\$val = \${\$self->{"\Q$_\E"}};
+		}
 		if (ref(\$self->{"\Q$_\E"}) eq 'ARRAY')
 		{
-			return \@{\$self->{"\Q$_\E"}}[0];
+			\$val = \@{\$self->{"\Q$_\E"}}[0];
 		}
+		\$valref = shared_clone(\$valref) if \$${caller}::${context}{':shared'};
+		\$self->{"\Q$_\E"} = \$valref;
 		return \${\$self->{"\Q$_\E"}};
 	} elsif (defined(wantarray))
 	{
