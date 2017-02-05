@@ -243,6 +243,7 @@ sub TIEHASH
 
 sub STORE
 {
+	lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"};
 	my $self = shift;
 	my ($key, $value) = @_;
 	return unless $key =~ /^[^\W\d]\w*\z/s;
@@ -261,6 +262,7 @@ sub STORE
 
 sub FETCH
 {
+	lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"};
 	my $self = shift;
 	my ($key, $value) = @_;
 	return unless $key =~ /^[^\W\d]\w*\z/s;
@@ -277,15 +279,16 @@ sub FETCH
 	$self->[0]->{$key};
 }
 
-sub FIRSTKEY { my $a = scalar keys %{$_[0][0]}; each %{$_[0][0]} }
-sub NEXTKEY  { each %{$_[0][0]} }
-sub EXISTS   { exists $_[0][0]->{$_[1]} }
-sub DELETE   { delete $_[0][0]->{$_[1]} }
-sub CLEAR    { %{$_[0][0]} = () }
-sub SCALAR   { scalar %{$_[0][0]} }
+sub FIRSTKEY { lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"}; my $a = scalar keys %{$_[0][0]}; each %{$_[0][0]} }
+sub NEXTKEY  { lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"}; each %{$_[0][0]} }
+sub EXISTS   { lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"}; exists $_[0][0]->{$_[1]} }
+sub DELETE   { lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"}; delete $_[0][0]->{$_[1]} }
+sub CLEAR    { lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"}; %{$_[0][0]} = () }
+sub SCALAR   { lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"}; scalar %{$_[0][0]} }
 
 sub def
 {
+	lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"};
 	my $self = shift;
 	my ($key) = @_;
 	return unless $key =~ /^[^\W\d]\w*\z/s;

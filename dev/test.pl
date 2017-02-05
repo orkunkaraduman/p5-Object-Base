@@ -30,7 +30,7 @@ attributes ':shared', 'attr1', 'attr2';
 
 package Bar;
 use Object::Base 'Foo';
-attributes 'attr3', ':shared' => undef, 'attr2' => { default => sub { return 7; }, getter => sub { return 101; }, setter => sub { say $_[2]; } }, ':lazy';
+attributes 'attr3', ':shared' => undef, 'attr2' => { default => sub { return 7; }, getter => sub { my $a :shared = 101; return $a; }, setter => sub {  } }, ':lazy';
 
 package main;
 use threads;
@@ -72,6 +72,11 @@ eval { $foo->attr2 = { key1 => 'val1' } }; print "Eval: $@"; # prints error 'Eva
 $foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
 print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
+
+{
+	print "\$foo attr1 is ", is_shared($foo->attr1)? "shared": "not shared", "\n";
+	lock($foo->attr1);
+}
 
 say "OK";
 exit 0;
