@@ -233,7 +233,7 @@ sub TIEHASH
 	bless $self, $class;
 	unless (${"$self->[1]::${context}"}{":lazy"})
 	{
-		for (keys(%{"$self->[1]::${context}"}))
+		for (grep /^[^\W\d]\w*\z/s, keys(%{"$self->[1]::${context}"}))
 		{
 			$self->def($_);
 		}
@@ -243,12 +243,38 @@ sub TIEHASH
 
 sub STORE
 {
-	$_[0][0]{$_[1]} = $_[2]
+	my $self = shift;
+	my ($key, $value) = @_;
+	return unless $key =~ /^[^\W\d]\w*\z/s;
+	$self->def($key) unless exists($self->[0]->{$key});
+	my $attr = ${"$self->[1]::${context}"}{$key};
+	if (ref($attr) eq 'HASH' and exists($attr->{"setter"}))
+	{
+		my $setter = $attr->{"setter"};
+		if (ref($setter) eq 'CODE')
+		{
+			$setter->(${$self->[2]}, $key, $value);
+		}
+	}
+	$self->[0]->{$key} = $value;
 }
 
 sub FETCH
 {
-	$_[0][0]{$_[1]}
+	my $self = shift;
+	my ($key, $value) = @_;
+	return unless $key =~ /^[^\W\d]\w*\z/s;
+	$self->def($key) unless exists($self->[0]->{$key});
+	my $attr = ${"$self->[1]::${context}"}{$key};
+	if (ref($attr) eq 'HASH' and exists($attr->{"getter"}))
+	{
+		my $getter = $attr->{"getter"};
+		if (ref($getter) eq 'CODE')
+		{
+			$self->[0]->{$key} = $getter->(${$self->[2]}, $key, $value, $self->[0]->{$key});
+		}
+	}
+	$self->[0]->{$key};
 }
 
 sub FIRSTKEY { my $a = scalar keys %{$_[0][0]}; each %{$_[0][0]} }
@@ -262,16 +288,17 @@ sub def
 {
 	my $self = shift;
 	my ($key) = @_;
+	return unless $key =~ /^[^\W\d]\w*\z/s;
 	my $attr = ${"$self->[1]::${context}"}{$key};
-	if (exists($attr->{"default"}))
+	if (ref($attr) eq 'HASH' and exists($attr->{"default"}))
 	{
 		my $default = $attr->{"default"};
-		unless (ref($default) eq 'CODE')
-		{
-			return $self->[0]{$key} = $default;
-		} else
+		if (ref($default) eq 'CODE')
 		{
 			return $self->[0]{$key} = $default->(${$self->[2]}, $key);
+		} else
+		{
+			return $self->[0]{$key} = $default;
 		}
 	}
 	return;

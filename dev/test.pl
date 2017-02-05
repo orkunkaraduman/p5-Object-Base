@@ -30,7 +30,7 @@ attributes ':shared', 'attr1', 'attr2';
 
 package Bar;
 use Object::Base 'Foo';
-attributes 'attr3', ':shared' => undef, 'attr2' => { default => sub { say $_[0]; 7; } };
+attributes 'attr3', ':shared' => undef, 'attr2' => { default => sub { return 7; }, getter => sub { return 101; }, setter => sub { say $_[2]; } }, ':lazy';
 
 package main;
 use threads;
@@ -56,7 +56,7 @@ my $bar = Bar->new();
 # attributes can be added derived classes
 $bar->attr3(3);
 
-say $bar->attr2;
+say $bar->attr2++;
 
 # attributes are inheritable
 $bar->attr1(3);
