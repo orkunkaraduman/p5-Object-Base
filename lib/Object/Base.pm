@@ -204,7 +204,7 @@ sub new
 	die "Invalid self-class" unless defined($class) and not ref($class) and UNIVERSAL::isa($class, $package);
 	die "$package context is not defined" unless defined(\%{"${class}::${context}"});
 	my $self = {};
-	tie %$self, "${package}::TieHash", $class;
+	tie %$self, "${package}::TieHash", $class, \$self;
 	$self = shared_clone($self) if ${"${class}::${context}"}{":shared"};
 	bless $self, $class;
 }
@@ -228,8 +228,16 @@ BEGIN
 sub TIEHASH
 {
 	my $class = shift;
-	my $self = bless [{}, @_], $class;
-	$self = shared_clone($self) if ${"$_[0]::${context}"}{":shared"};
+	my $self = [{}, @_];
+	$self = shared_clone($self) if ${"$self->[1]::${context}"}{":shared"};
+	bless $self, $class;
+	unless (${"$self->[1]::${context}"}{":lazy"})
+	{
+		for (keys(%{"$self->[1]::${context}"}))
+		{
+			$self->def($_);
+		}
+	}
 	$self;
 }
 
@@ -253,15 +261,20 @@ sub SCALAR   { scalar %{$_[0][0]} }
 sub def
 {
 	my $self = shift;
-	my $hash = $self->[0];
-	my $top = $self->[1];
 	my ($key) = @_;
-	my $attr = ${"$top::${context}"}{$key};
+	my $attr = ${"$self->[1]::${context}"}{$key};
 	if (exists($attr->{"default"}))
 	{
 		my $default = $attr->{"default"};
-
+		unless (ref($default) eq 'CODE')
+		{
+			return $self->[0]{$key} = $default;
+		} else
+		{
+			return $self->[0]{$key} = $default->(${$self->[2]}, $key);
+		}
 	}
+	return;
 }
 
 
