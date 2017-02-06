@@ -74,10 +74,15 @@ print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
 
 {
-	print "\$foo attr1 is ", is_shared($foo->attr1)? "shared": "not shared", "\n";
-	lock($foo->attr1);
+	#my $a :shared = 10;
+	#$foo->attr1 = \$a;
+	#share(${$foo->attr1});
+	print "\$foo attr1 is ", is_shared($a)? "shared": "not shared", "\n";
+	#lock(${$foo->attr1});
 }
 
+#use Config;
+say Dumper($Config::Config{'useithreads'});
 say "OK";
 exit 0;
 __END__

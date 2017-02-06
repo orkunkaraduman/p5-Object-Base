@@ -10,6 +10,7 @@ WriteMakefile(
 	PREREQ_PM			=> {
 		'threads'		=> '1.72',
 		'threads::shared' => '1.28',
+		'forks'		=> '0.29',
 	},
 	EXE_FILES			=> [qw(
 	)],

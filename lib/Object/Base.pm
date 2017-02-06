@@ -97,11 +97,25 @@ Examples;
 	print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
 =cut
+BEGIN
+{
+	if ($Config::Config{'useithreads'})
+	{
+		require threads;
+		threads->import();
+		require threads::shared;
+		threads::shared->import();
+	} else
+	{
+		require forks;
+		forks->import();
+		require forks::shared;
+		forks::shared->import();
+	}
+}
 use strict;
 no strict qw(refs);
 use warnings;
-use threads;
-use threads::shared;
 
 
 BEGIN
@@ -124,10 +138,26 @@ sub import
 	return unless $importer eq $package;
 	eval join "\n",
 		"package $caller;",
+		<< "EOF",
+BEGIN
+{
+	if (\$Config::Config{'useithreads'})
+	{
+		require threads;
+		threads->import();
+		require threads::shared;
+		threads::shared->import();
+	} else
+	{
+		require forks;
+		forks->import();
+		require forks::shared;
+		forks::shared->import();
+	}
+}
+EOF
 		"use strict;",
 		"use warnings;",
-		"use threads;",
-		"use threads::shared;",
 		"\$${caller}::attributes = undef;",
 		"\*${caller}::attributes = \\\&${package}::attributes;",
 		"\%${caller}::${context} = () unless defined(\\\%${caller}::${context});",
@@ -211,11 +241,25 @@ sub new
 
 
 package Object::Base::TieHash;
+BEGIN
+{
+	if ($Config::Config{'useithreads'})
+	{
+		require threads;
+		threads->import();
+		require threads::shared;
+		threads::shared->import();
+	} else
+	{
+		require forks;
+		forks->import();
+		require forks::shared;
+		forks::shared->import();
+	}
+}
 use strict;
 no strict qw(refs);
 use warnings;
-use threads;
-use threads::shared;
 
 
 BEGIN
