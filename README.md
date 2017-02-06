@@ -1,14 +1,14 @@
 # NAME
 
-Object::Base - Multi-threaded base class to establish a class deriving relationship with base classes
+Object::Base - Multi-threaded base class to establish a class deriving relationship with parent classes
 
 # VERSION
 
-version 1.02
+version 1.03
 
 # ABSTRACT
 
-Multi-threaded base class to establish a class deriving relationship with base classes
+Multi-threaded base class to establish a class deriving relationship with parent classes
 
         package Foo;
         use Object::Base;
@@ -21,19 +21,26 @@ Multi-threaded base class to establish a class deriving relationship with base c
 
 Object::Base provides blessed and thread-shared(with :shared attribute) object with in **new** method. **new** method
 can be used as a constructor and overridable in derived classes. **new()** should be called in derived class
-constructors to create and bless self-object. Derived classes own module automatically uses strict, warnings, threads,
-threads::shared with using Object::Base. Import parameters of Object::Base, define parent classes of derived class.
+constructors to create and bless self-object.
+
+Derived classes own module automatically uses threads, threads::shared, strict, warnings with using Object::Base. If
+Perl is not built to support threads; it uses forks, forks::shared instead of threads, threads::shared. Object::Base
+should be loaded as first module.
+
+Import parameters of Object::Base, define parent classes of derived class.
 If none of parent classes derived from Object::Base or any parent isn&#39;t defined, Object::Base is automatically added
 in parent classes.
 
 Attributes define read-write accessors binded value of same named key in objects own hash if attribute names is
-valid subroutine identifiers. Otherwise, attribute is special to get new features into class.
+valid subroutine identifiers. Otherwise, attribute is class feature to get new features into class.
 
 Attributes;
 
 - Lvaluable
 - Inheritable
 - Overridable
+- Redefinable
+- Thread-Safe
 
 Examples;
 
