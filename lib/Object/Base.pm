@@ -20,7 +20,7 @@ Multi-threaded base class to establish a class deriving relationship with parent
 
 =head1 DESCRIPTION
 
-Object::Base provides blessed and thread-shared(with :shared attribute) object with in B<new> method. B<new> method
+Object::Base provides blessed and thread-shared(with :shared feature) object with in B<new> method. B<new> method
 can be used as a constructor and overridable in derived classes. B<new()> should be called in derived class
 constructors to create and bless self-object.
 
@@ -32,8 +32,10 @@ Import parameters of Object::Base, define parent classes of derived class.
 If none of parent classes derived from Object::Base or any parent isn't defined, Object::Base is automatically added
 in parent classes.
 
+=head2 Attributes
+
 Attributes define read-write accessors binded value of same named key in objects own hash if attribute names is
-valid subroutine identifiers. Otherwise, attribute is class feature to get new features into class.
+valid subroutine identifiers. Otherwise, attribute defines B<feature> to get new features into class.
 
 Attributes;
 
@@ -60,6 +62,49 @@ Redefinable
 Thread-Safe
 
 =back
+
+Attributes can have their own modifiers in hash reference at definition.
+
+=head3 default
+
+default value of attribute
+
+	attributes
+		'attr1' => {
+			'default' => sub {
+				my ($self, $attr) = @_;
+				return "default value of $attr";
+			},
+		},
+		'attr2' => {
+			'default' => "default value of attr2",
+		};
+
+=head3 getter
+
+getter method of attribute
+
+	my $attr1_val;
+	attributes
+		'attr1' => {
+			'getter' => sub {
+				my ($self, $attr, $current_value) = @_;
+				return $attr1_val;
+			},
+		};
+
+=head3 setter
+
+setter method of attribute
+
+	my $attr1_val;
+	attributes
+		'attr1' => {
+			'setter' => sub {
+				my ($self, $attr, $current_value, $new_value) = @_;
+				$attr1_val = $new_value;
+			},
+		};
 
 Examples;
 
@@ -295,6 +340,7 @@ sub TIEHASH
 	{
 		for (grep /^[^\W\d]\w*\z/s, keys(%{"$self->[1]::${context}"}))
 		{
+			$self->[0]->{$_} = undef;
 			$self->def($_);
 		}
 	}
@@ -314,7 +360,7 @@ sub STORE
 		my $setter = $attr->{"setter"};
 		if (ref($setter) eq 'CODE')
 		{
-			$setter->(${$self->[2]}, $key, $value);
+			$setter->(${$self->[2]}, $key, $self->[0]->{$key}, $value);
 		}
 	}
 	$self->[0]->{$key} = $value;
@@ -324,7 +370,7 @@ sub FETCH
 {
 	lock(@{$_[0]}) if is_shared(@{$_[0]});
 	my $self = shift;
-	my ($key, $value) = @_;
+	my ($key) = @_;
 	return unless $key =~ /^[^\W\d]\w*\z/s;
 	$self->def($key) unless exists($self->[0]->{$key});
 	my $attr = ${"$self->[1]::${context}"}{$key};
@@ -333,7 +379,7 @@ sub FETCH
 		my $getter = $attr->{"getter"};
 		if (ref($getter) eq 'CODE')
 		{
-			$self->[0]->{$key} = $getter->(${$self->[2]}, $key, $value, $self->[0]->{$key});
+			$self->[0]->{$key} = $getter->(${$self->[2]}, $key, $self->[0]->{$key});
 		}
 	}
 	$self->[0]->{$key};
