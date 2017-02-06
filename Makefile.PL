@@ -15,7 +15,7 @@ WriteMakefile(
 	EXE_FILES			=> [qw(
 	)],
 	AUTHOR				=> 'Orkun Karaduman <orkunkaraduman@gmail.com>',
-	ABSTRACT			=> 'Multi-threaded base class to establish a class deriving relationship with base classes',
+	ABSTRACT			=> 'Multi-threaded base class to establish a class deriving relationship with parent classes',
 	LICENSE				=> 'gpl_3',
 	META_MERGE			=> {
 		'meta-spec'		=> {

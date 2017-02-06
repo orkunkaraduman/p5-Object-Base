@@ -1,7 +1,7 @@
 package Object::Base;
 =head1 NAME
 
-Object::Base - Multi-threaded base class to establish a class deriving relationship with base classes
+Object::Base - Multi-threaded base class to establish a class deriving relationship with parent classes
 
 =head1 VERSION
 
@@ -9,7 +9,7 @@ version 1.03
 
 =head1 ABSTRACT
 
-Multi-threaded base class to establish a class deriving relationship with base classes
+Multi-threaded base class to establish a class deriving relationship with parent classes
 
 	package Foo;
 	use Object::Base;
@@ -22,13 +22,18 @@ Multi-threaded base class to establish a class deriving relationship with base c
 
 Object::Base provides blessed and thread-shared(with :shared attribute) object with in B<new> method. B<new> method
 can be used as a constructor and overridable in derived classes. B<new()> should be called in derived class
-constructors to create and bless self-object. Derived classes own module automatically uses strict, warnings, threads,
-threads::shared with using Object::Base. Import parameters of Object::Base, define parent classes of derived class.
+constructors to create and bless self-object.
+
+Derived classes own module automatically uses threads, threads::shared, strict, warnings with using Object::Base. If
+Perl is not built to support threads; it uses forks, forks::shared instead of threads, threads::shared. Object::Base
+should be loaded as first module.
+
+Import parameters of Object::Base, define parent classes of derived class.
 If none of parent classes derived from Object::Base or any parent isn't defined, Object::Base is automatically added
 in parent classes.
 
 Attributes define read-write accessors binded value of same named key in objects own hash if attribute names is
-valid subroutine identifiers. Otherwise, attribute is special to get new features into class.
+valid subroutine identifiers. Otherwise, attribute is class feature to get new features into class.
 
 Attributes;
 
@@ -45,6 +50,14 @@ Inheritable
 =item *
 
 Overridable
+
+=item *
+
+Redefinable
+
+=item *
+
+Thread-Safe
 
 =back
 
@@ -158,9 +171,11 @@ BEGIN
 EOF
 		"use strict;",
 		"use warnings;",
+		"",
 		"\$${caller}::attributes = undef;",
 		"\*${caller}::attributes = \\\&${package}::attributes;",
 		"\%${caller}::${context} = () unless defined(\\\%${caller}::${context});",
+		"",
 		(
 			map {
 				my $p = (defined and not ref)? $_: "";
@@ -201,6 +216,7 @@ sub attributes
 	}
 	eval join "\n",
 		"package $caller;",
+		"",
 		map {
 			<< "EOF";
 sub $_ :lvalue

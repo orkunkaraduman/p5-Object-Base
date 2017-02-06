@@ -30,7 +30,7 @@ attributes ':shared', 'attr1', 'attr2';
 
 package Bar;
 use Object::Base 'Foo';
-attributes 'attr3', ':shared' => undef, 'attr2' => { default => sub { return 7; }, getter => sub { my $a :shared = 101; return $a; }, setter => sub {  } }, ':lazy';
+attributes 'attr3', ':shared' => undef, 'attr2' => undef;
 
 package main;
 use threads;
@@ -56,8 +56,6 @@ my $bar = Bar->new();
 # attributes can be added derived classes
 $bar->attr3(3);
 
-say $bar->attr2++;
-
 # attributes are inheritable
 $bar->attr1(3);
 
@@ -73,16 +71,6 @@ $foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
 print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
 
-{
-	#my $a :shared = 10;
-	#$foo->attr1 = \$a;
-	#share(${$foo->attr1});
-	print "\$foo attr1 is ", is_shared($a)? "shared": "not shared", "\n";
-	#lock(${$foo->attr1});
-}
-
-#use Config;
-say Dumper($Config::Config{'useithreads'});
 say "OK";
 exit 0;
 __END__
