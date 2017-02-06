@@ -1,3 +1,10 @@
+1.03	2017-02-06
+		- Allowed attribute redefinition
+		- Added default/getter/setter attribute definitions
+		- Added ':lazy' special attribute
+		- Added internal attribute locks for thread-safety
+		- Added forks support for Perl not built to support threads
+
 1.02	2017-02-01
 		- Attribute name quotemeta fix
 		- Added thread libraries in prerequirements

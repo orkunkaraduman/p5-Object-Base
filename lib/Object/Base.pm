@@ -1,15 +1,15 @@
 package Object::Base;
 =head1 NAME
 
-Object::Base - Multi-threaded base class to establish a class deriving relationship with base classes
+Object::Base - Multi-threaded base class to establish a class deriving relationship with parent classes
 
 =head1 VERSION
 
-version 1.02
+version 1.03
 
 =head1 ABSTRACT
 
-Multi-threaded base class to establish a class deriving relationship with base classes
+Multi-threaded base class to establish a class deriving relationship with parent classes
 
 	package Foo;
 	use Object::Base;
@@ -22,13 +22,18 @@ Multi-threaded base class to establish a class deriving relationship with base c
 
 Object::Base provides blessed and thread-shared(with :shared attribute) object with in B<new> method. B<new> method
 can be used as a constructor and overridable in derived classes. B<new()> should be called in derived class
-constructors to create and bless self-object. Derived classes own module automatically uses strict, warnings, threads,
-threads::shared with using Object::Base. Import parameters of Object::Base, define parent classes of derived class.
+constructors to create and bless self-object.
+
+Derived classes own module automatically uses threads, threads::shared, strict, warnings with using Object::Base. If
+Perl is not built to support threads; it uses forks, forks::shared instead of threads, threads::shared. Object::Base
+should be loaded as first module.
+
+Import parameters of Object::Base, define parent classes of derived class.
 If none of parent classes derived from Object::Base or any parent isn't defined, Object::Base is automatically added
 in parent classes.
 
 Attributes define read-write accessors binded value of same named key in objects own hash if attribute names is
-valid subroutine identifiers. Otherwise, attribute is special to get new features into class.
+valid subroutine identifiers. Otherwise, attribute is class feature to get new features into class.
 
 Attributes;
 
@@ -45,6 +50,14 @@ Inheritable
 =item *
 
 Overridable
+
+=item *
+
+Redefinable
+
+=item *
+
+Thread-Safe
 
 =back
 
@@ -97,17 +110,31 @@ Examples;
 	print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
 =cut
+BEGIN
+{
+	if ($Config::Config{'useithreads'})
+	{
+		require threads;
+		threads->import();
+		require threads::shared;
+		threads::shared->import();
+	} else
+	{
+		require forks;
+		forks->import();
+		require forks::shared;
+		forks::shared->import();
+	}
+}
 use strict;
 no strict qw(refs);
 use warnings;
-use threads;
-use threads::shared;
 
 
 BEGIN
 {
 	require 5.008;
-	$Object::Base::VERSION = '1.02';
+	$Object::Base::VERSION = '1.03';
 	$Object::Base::ISA = ();
 }
 
@@ -124,17 +151,35 @@ sub import
 	return unless $importer eq $package;
 	eval join "\n",
 		"package $caller;",
+		<< "EOF",
+BEGIN
+{
+	if (\$Config::Config{'useithreads'})
+	{
+		require threads;
+		threads->import();
+		require threads::shared;
+		threads::shared->import();
+	} else
+	{
+		require forks;
+		forks->import();
+		require forks::shared;
+		forks::shared->import();
+	}
+}
+EOF
 		"use strict;",
 		"use warnings;",
-		"use threads;",
-		"use threads::shared;",
+		"",
 		"\$${caller}::attributes = undef;",
 		"\*${caller}::attributes = \\\&${package}::attributes;",
 		"\%${caller}::${context} = () unless defined(\\\%${caller}::${context});",
+		"",
 		(
 			map {
 				my $p = (defined and not ref)? $_: "";
-				$p and /^[^\W\d]\w*(\:\:[^\W\d]\w*)*\z/s or die "Invalid package name $p";
+				$p and /^[^\W\d]\w*(\:\:[^\W\d]\w*)*\z/s or die "Invalid base-class name $p";
 				<< "EOF";
 eval { require $_ };
 push \@${caller}::ISA, '$_';
@@ -171,28 +216,30 @@ sub attributes
 	}
 	eval join "\n",
 		"package $caller;",
+		"",
 		map {
 			<< "EOF";
-sub $_(\$) :lvalue
+sub $_ :lvalue
 {
 	my \$self = shift;
 	die 'Attribute $_ is not defined in $caller' if not defined(\$self) or
 		not UNIVERSAL::isa(ref(\$self), '$package') or
 		not \$${caller}::${context}{"\Q$_\E"};
-	if (\@_ >= 1)
+	my \@args = \@_;
+	if (\@args >= 1)
 	{
-		if (ref(\$_[0]) and \$${caller}::${context}{':shared'})
+		unless (ref(\$args[0]) and \$${caller}::${context}{':shared'})
 		{
-			\$self->{"\Q$_\E"} = shared_clone(\$_[0]);
+			\$self->{"\Q$_\E"} = \$args[0];
 		} else
 		{
-			\$self->{"\Q$_\E"} = \$_[0];
+			\$self->{"\Q$_\E"} = shared_clone(\$args[0]);
 		}
 	}
-	return \$self->{"\Q$_\E"};
+	\$self->{"\Q$_\E"};
 }
 EOF
-		} grep /^[^\W\d]\w*\z/s, keys %{"${caller}::${context}"};
+		} grep { /^[^\W\d]\w*\z/s and not exists(&{"${caller}::$_"}) } keys %{"${caller}::${context}"};
 	die "Failed to generate attributes in $caller: $@" if $@;
 	return 1;
 }
@@ -200,10 +247,124 @@ EOF
 sub new
 {
 	my $class = shift;
+	die "Invalid self-class" unless defined($class) and not ref($class) and UNIVERSAL::isa($class, $package);
+	die "$package context is not defined" unless defined(\%{"${class}::${context}"});
 	my $self = {};
-	$self = &share($self) if ${"${class}::${context}"}{":shared"};
+	tie %$self, "${package}::TieHash", $class, \$self;
+	$self = shared_clone($self) if ${"${class}::${context}"}{":shared"};
 	bless $self, $class;
-	return $self;
+}
+
+
+package Object::Base::TieHash;
+BEGIN
+{
+	if ($Config::Config{'useithreads'})
+	{
+		require threads;
+		threads->import();
+		require threads::shared;
+		threads::shared->import();
+	} else
+	{
+		require forks;
+		forks->import();
+		require forks::shared;
+		forks::shared->import();
+	}
+}
+use strict;
+no strict qw(refs);
+use warnings;
+
+
+BEGIN
+{
+	require 5.008;
+	$Object::Base::TieHash::VERSION = $Object::Base::VERSION;
+}
+
+
+sub TIEHASH
+{
+	my $class = shift;
+	my $self = [{}, @_];
+	$self = shared_clone($self) if ${"$self->[1]::${context}"}{":shared"};
+	bless $self, $class;
+	unless (${"$self->[1]::${context}"}{":lazy"})
+	{
+		for (grep /^[^\W\d]\w*\z/s, keys(%{"$self->[1]::${context}"}))
+		{
+			$self->def($_);
+		}
+	}
+	$self;
+}
+
+sub STORE
+{
+	lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"};
+	my $self = shift;
+	my ($key, $value) = @_;
+	return unless $key =~ /^[^\W\d]\w*\z/s;
+	$self->def($key) unless exists($self->[0]->{$key});
+	my $attr = ${"$self->[1]::${context}"}{$key};
+	if (ref($attr) eq 'HASH' and exists($attr->{"setter"}))
+	{
+		my $setter = $attr->{"setter"};
+		if (ref($setter) eq 'CODE')
+		{
+			$setter->(${$self->[2]}, $key, $value);
+		}
+	}
+	$self->[0]->{$key} = $value;
+}
+
+sub FETCH
+{
+	lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"};
+	my $self = shift;
+	my ($key, $value) = @_;
+	return unless $key =~ /^[^\W\d]\w*\z/s;
+	$self->def($key) unless exists($self->[0]->{$key});
+	my $attr = ${"$self->[1]::${context}"}{$key};
+	if (ref($attr) eq 'HASH' and exists($attr->{"getter"}))
+	{
+		my $getter = $attr->{"getter"};
+		if (ref($getter) eq 'CODE')
+		{
+			$self->[0]->{$key} = $getter->(${$self->[2]}, $key, $value, $self->[0]->{$key});
+		}
+	}
+	$self->[0]->{$key};
+}
+
+sub FIRSTKEY { lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"}; my $a = scalar keys %{$_[0][0]}; each %{$_[0][0]} }
+sub NEXTKEY  { lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"}; each %{$_[0][0]} }
+sub EXISTS   { lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"}; exists $_[0][0]->{$_[1]} }
+sub DELETE   { lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"}; delete $_[0][0]->{$_[1]} }
+sub CLEAR    { lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"}; %{$_[0][0]} = () }
+sub SCALAR   { lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"}; scalar %{$_[0][0]} }
+
+sub def
+{
+	lock($_[0]) if ${"$_[0]->[1]::${context}"}{":shared"};
+	my $self = shift;
+	my ($key) = @_;
+	return unless $key =~ /^[^\W\d]\w*\z/s;
+	my $attr = ${"$self->[1]::${context}"}{$key};
+	if (ref($attr) eq 'HASH' and exists($attr->{"default"}))
+	{
+		my $default = $attr->{"default"};
+		if (ref($default) eq 'CODE')
+		{
+			return $self->[0]{$key} = $default->(${$self->[2]}, $key);
+		} else
+		{
+			return $self->[0]{$key} = $default;
+		}
+	}
+	return;
 }
 
 

@@ -10,14 +10,15 @@ WriteMakefile(
 	PREREQ_PM			=> {
 		'threads'		=> '1.72',
 		'threads::shared' => '1.28',
+		'forks'		=> '0.29',
 	},
 	EXE_FILES			=> [qw(
 	)],
 	AUTHOR				=> 'Orkun Karaduman <orkunkaraduman@gmail.com>',
-	ABSTRACT			=> 'Multi-threaded base class to establish a class deriving relationship with base classes',
+	ABSTRACT			=> 'Multi-threaded base class to establish a class deriving relationship with parent classes',
 	LICENSE				=> 'gpl_3',
 	META_MERGE			=> {
-		'meta-spec' => {
+		'meta-spec'		=> {
 			version		=> 2,
 		},
 		resources => {
