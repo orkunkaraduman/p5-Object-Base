@@ -4,7 +4,7 @@ Object::Base - Multi-threaded base class to establish a class deriving relations
 
 # VERSION
 
-version 1.03
+version 1.04
 
 # ABSTRACT
 
@@ -19,7 +19,7 @@ Multi-threaded base class to establish a class deriving relationship with parent
 
 # DESCRIPTION
 
-Object::Base provides blessed and thread-shared(with :shared attribute) object with in **new** method. **new** method
+Object::Base provides blessed and thread-shared(with :shared feature) object with in **new** method. **new** method
 can be used as a constructor and overridable in derived classes. **new()** should be called in derived class
 constructors to create and bless self-object.
 
@@ -31,8 +31,10 @@ Import parameters of Object::Base, define parent classes of derived class.
 If none of parent classes derived from Object::Base or any parent isn&#39;t defined, Object::Base is automatically added
 in parent classes.
 
+## Attributes
+
 Attributes define read-write accessors binded value of same named key in objects own hash if attribute names is
-valid subroutine identifiers. Otherwise, attribute is class feature to get new features into class.
+valid subroutine identifiers. Otherwise, attribute defines **feature** to get new features into class.
 
 Attributes;
 
@@ -42,11 +44,83 @@ Attributes;
 - Redefinable
 - Thread-Safe
 
-Examples;
+### Modifiers
+
+Attributes can have their own modifiers in hash reference at definition.
+
+#### default
+
+getter method of default value of attribute, otherwise value is default value
+
+        attributes
+                'attr1' => {
+                        'default' => sub {
+                                my ($self, $attr) = @_;
+                                return "default value of $attr";
+                        },
+                },
+                'attr2' => {
+                        'default' => "default value of attr2",
+                };
+
+#### getter
+
+getter method of attribute
+
+        my $attr1_val;
+        attributes
+                'attr1' => {
+                        'getter' => sub {
+                                my ($self, $attr, $current_value) = @_;
+                                return $attr1_val;
+                        },
+                };
+
+#### setter
+
+setter method of attribute
+
+        my $attr1_val;
+        attributes
+                'attr1' => {
+                        'setter' => sub {
+                                my ($self, $attr, $current_value, $new_value) = @_;
+                                $attr1_val = $new_value;
+                        },
+                };
+
+### Features
+
+#### :shared
+
+Class will be craated as thread-shared.
+
+#### :lazy
+
+Attribute default value will be initialized at first fetching or storing.
+
+## Examples
 
         package Foo;
         use Object::Base;
-        attributes ':shared', 'attr1', 'attr2';
+        my $attr3_def = 6;
+        my $attr3_val;
+        attributes ':shared', 'attr1', 'attr2', ':lazy',
+                'attr3' => {
+                        'default' => sub {
+                                my ($self, $attr) = @_;
+                                $attr3_val = $attr3_def;
+                                return $attr3_def;
+                        },
+                        'getter' => sub {
+                                my ($self, $attr, $current_value) = @_;
+                                return $attr3_val+1;
+                        },
+                        'setter' => sub {
+                                my ($self, $attr, $current_value, $new_value) = @_;
+                                $attr3_val = $new_value-1;
+                        },
+                };
         
         package Bar;
         use Object::Base 'Foo';
@@ -70,6 +144,9 @@ Examples;
         # special attribute ':shared'
         print "\$foo is ", is_shared($foo)? "shared": "not shared", "\n";
         
+        # attributes can have modifiers: default, getter, setter
+        print "attr3 value ", $foo->attr3, " and stored as $attr3_val", "\n"; # prints 'attr3 value 7 and stored as 6'
+        
         # object of derived class Bar
         my $bar = Bar->new();
         
@@ -89,6 +166,12 @@ Examples;
         eval { $foo->attr2 = { key1 => 'val1' } }; print "Eval: $@"; # prints error 'Eval: Invalid value for shared scalar at ...'
         $foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
         print $foo->attr2->{key2}, "\n"; # prints 'val2'
+        
+        # attributes in thread
+        my $thr1 = threads->create(sub { $foo->attr1 = 5; $bar->attr1 = 5; });
+        my $thr2 = threads->create(sub { sleep 1; print "\$foo is shared and attr1: ", $foo->attr1, ", \$bar is not shared and attr1: ", $bar->attr1, "\n"; });
+        $thr1->join();
+        $thr2->join();
 
 # INSTALLATION
 
@@ -109,6 +192,7 @@ This module requires these other modules and libraries:
 
 - threads
 - threads::shared
+- forks
 
 # REPOSITORY
 
