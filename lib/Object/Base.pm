@@ -67,7 +67,7 @@ Attributes can have their own modifiers in hash reference at definition.
 
 =head3 default
 
-default value of attribute
+getter method of default value of attribute, otherwise value is default value
 
 	attributes
 		'attr1' => {
@@ -110,7 +110,24 @@ Examples;
 
 	package Foo;
 	use Object::Base;
-	attributes ':shared', 'attr1', 'attr2';
+	my $attr3_def = 6;
+	my $attr3_val;
+	attributes ':shared', 'attr1', 'attr2', ':lazy',
+		'attr3' => {
+			'default' => sub {
+				my ($self, $attr) = @_;
+				$attr3_val = $attr3_def;
+				return $attr3_def;
+			},
+			'getter' => sub {
+				my ($self, $attr, $current_value) = @_;
+				return $attr3_val+1;
+			},
+			'setter' => sub {
+				my ($self, $attr, $current_value, $new_value) = @_;
+				$attr3_val = $new_value-1;
+			},
+		};
 	
 	package Bar;
 	use Object::Base 'Foo';
@@ -133,6 +150,9 @@ Examples;
 	
 	# special attribute ':shared'
 	print "\$foo is ", is_shared($foo)? "shared": "not shared", "\n";
+	
+	# attributes can have modifiers: default, getter, setter
+	print "attr3 value ", $foo->attr3, " and stored as $attr3_val", "\n"; # prints 'attr3 value 7 and stored as 6'
 	
 	# object of derived class Bar
 	my $bar = Bar->new();
