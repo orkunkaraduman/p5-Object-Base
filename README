@@ -48,6 +48,7 @@ DESCRIPTION
 
     *   Thread-Safe
 
+   Modifiers
     Attributes can have their own modifiers in hash reference at definition.
 
    default
@@ -89,8 +90,15 @@ DESCRIPTION
                             },
                     };
 
-    Examples;
+   Features
+   :shared
+    Class will be craated as thread-shared.
 
+   :lazy
+    Attribute default value will be initialized at first fetching or
+    storing.
+
+  Examples
             package Foo;
             use Object::Base;
             my $attr3_def = 6;

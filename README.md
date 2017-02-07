@@ -44,9 +44,11 @@ Attributes;
 - Redefinable
 - Thread-Safe
 
+### Modifiers
+
 Attributes can have their own modifiers in hash reference at definition.
 
-### default
+#### default
 
 getter method of default value of attribute, otherwise value is default value
 
@@ -61,7 +63,7 @@ getter method of default value of attribute, otherwise value is default value
                         'default' => "default value of attr2",
                 };
 
-### getter
+#### getter
 
 getter method of attribute
 
@@ -74,7 +76,7 @@ getter method of attribute
                         },
                 };
 
-### setter
+#### setter
 
 setter method of attribute
 
@@ -87,7 +89,17 @@ setter method of attribute
                         },
                 };
 
-Examples;
+### Features
+
+#### :shared
+
+Class will be craated as thread-shared.
+
+#### :lazy
+
+Attribute default value will be initialized at first fetching or storing.
+
+## Examples
 
         package Foo;
         use Object::Base;

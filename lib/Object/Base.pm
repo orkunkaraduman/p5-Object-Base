@@ -63,9 +63,11 @@ Thread-Safe
 
 =back
 
+=head3 Modifiers
+
 Attributes can have their own modifiers in hash reference at definition.
 
-=head3 default
+=head4 default
 
 getter method of default value of attribute, otherwise value is default value
 
@@ -80,7 +82,7 @@ getter method of default value of attribute, otherwise value is default value
 			'default' => "default value of attr2",
 		};
 
-=head3 getter
+=head4 getter
 
 getter method of attribute
 
@@ -93,7 +95,7 @@ getter method of attribute
 			},
 		};
 
-=head3 setter
+=head4 setter
 
 setter method of attribute
 
@@ -106,7 +108,17 @@ setter method of attribute
 			},
 		};
 
-Examples;
+=head3 Features
+
+=head4 :shared
+
+Class will be craated as thread-shared.
+
+=head4 :lazy
+
+Attribute default value will be initialized at first fetching or storing.
+
+=head2 Examples
 
 	package Foo;
 	use Object::Base;
