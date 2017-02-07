@@ -67,7 +67,8 @@ print $foo->attr1, "\n"; # prints '2'
 # special attribute ':shared'
 print "\$foo is ", is_shared($foo)? "shared": "not shared", "\n";
 
-print $foo->attr3, "\n"; # prints '7'
+# attributes can have modifiers: default, getter, setter
+print "attr3 value ", $foo->attr3, " and stored as $attr3_val", "\n"; # prints 'attr3 value 7 and stored as 6'
 
 # object of derived class Bar
 my $bar = Bar->new();
