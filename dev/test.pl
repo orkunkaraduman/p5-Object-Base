@@ -90,6 +90,12 @@ eval { $foo->attr2 = { key1 => 'val1' } }; print "Eval: $@"; # prints error 'Eva
 $foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
 print $foo->attr2->{key2}, "\n"; # prints 'val2'
 
+# attributes in thread
+my $thr1 = threads->create(sub { $foo->attr1 = 5; $bar->attr1 = 5; });
+my $thr2 = threads->create(sub { sleep 1; print "\$foo is shared and attr1: ", $foo->attr1, ", \$bar is not shared and attr1: ", $bar->attr1, "\n"; });
+$thr1->join();
+$thr2->join();
+
 
 say "OK";
 exit 0;
