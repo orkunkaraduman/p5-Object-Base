@@ -333,8 +333,12 @@ BEGIN
 sub TIEHASH
 {
 	my $class = shift;
-	my $self = [{}, @_];
-	$self = shared_clone($self) if ${"$self->[1]::${context}"}{":shared"};
+	my $self = [{}, @_, {}];
+	if (${"$self->[1]::${context}"}{":shared"})
+	{
+		$self->[0] = shared_clone($self->[0]);
+		$self->[$#{$self}] = shared_clone($self->[$#{$self}]);
+	}
 	bless $self, $class;
 	unless (${"$self->[1]::${context}"}{":lazy"})
 	{
@@ -398,19 +402,23 @@ sub def
 	my $self = shift;
 	my ($key) = @_;
 	return unless $key =~ /^[^\W\d]\w*\z/s;
-	my $attr = ${"$self->[1]::${context}"}{$key};
-	if (ref($attr) eq 'HASH' and exists($attr->{"default"}))
+	unless (exists($self->[$#{$self}]->{$key}))
 	{
-		my $default = $attr->{"default"};
-		if (ref($default) eq 'CODE')
+		my $attr = ${"$self->[1]::${context}"}{$key};
+		if (ref($attr) eq 'HASH' and exists($attr->{"default"}))
 		{
-			return $self->[0]{$key} = $default->(${$self->[2]}, $key);
-		} else
-		{
-			return $self->[0]{$key} = $default;
+			my $default = $attr->{"default"};
+			if (ref($default) eq 'CODE')
+			{
+				$self->[$#{$self}]->{$key} = $default->(${$self->[2]}, $key);
+			} else
+			{
+				$self->[$#{$self}]->{$key} = $default;
+			}
+			$self->[0]{$key} = $self->[$#{$self}]->{$key};
 		}
 	}
-	return;
+	return $self->[$#{$self}]->{$key};
 }
 
 
