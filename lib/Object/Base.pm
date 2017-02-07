@@ -340,24 +340,21 @@ sub TIEHASH
 		$self->[$#{$self}] = shared_clone($self->[$#{$self}]);
 	}
 	bless $self, $class;
-	unless (${"$self->[1]::${context}"}{":lazy"})
+	for (grep /^[^\W\d]\w*\z/s, keys(%{"$self->[1]::${context}"}))
 	{
-		for (grep /^[^\W\d]\w*\z/s, keys(%{"$self->[1]::${context}"}))
-		{
-			$self->[0]->{$_} = undef;
-			$self->def($_);
-		}
+		$self->[0]->{$_} = undef;
+		$self->def($_) unless ${"$self->[1]::${context}"}{":lazy"};
 	}
 	$self;
 }
 
 sub STORE
 {
-	lock(@{$_[0]}) if is_shared(@{$_[0]});
+	lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]});
 	my $self = shift;
 	my ($key, $value) = @_;
 	return unless $key =~ /^[^\W\d]\w*\z/s;
-	$self->def($key) unless exists($self->[0]->{$key});
+	$self->def($key);
 	my $attr = ${"$self->[1]::${context}"}{$key};
 	if (ref($attr) eq 'HASH' and exists($attr->{"setter"}))
 	{
@@ -372,11 +369,11 @@ sub STORE
 
 sub FETCH
 {
-	lock(@{$_[0]}) if is_shared(@{$_[0]});
+	lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]});
 	my $self = shift;
 	my ($key) = @_;
 	return unless $key =~ /^[^\W\d]\w*\z/s;
-	$self->def($key) unless exists($self->[0]->{$key});
+	$self->def($key);
 	my $attr = ${"$self->[1]::${context}"}{$key};
 	if (ref($attr) eq 'HASH' and exists($attr->{"getter"}))
 	{
@@ -389,16 +386,16 @@ sub FETCH
 	$self->[0]->{$key};
 }
 
-sub FIRSTKEY { lock(@{$_[0]}) if is_shared(@{$_[0]}); my $a = scalar keys %{$_[0][0]}; each %{$_[0][0]} }
-sub NEXTKEY  { lock(@{$_[0]}) if is_shared(@{$_[0]}); each %{$_[0][0]} }
-sub EXISTS   { lock(@{$_[0]}) if is_shared(@{$_[0]}); exists $_[0][0]->{$_[1]} }
-sub DELETE   { lock(@{$_[0]}) if is_shared(@{$_[0]}); delete $_[0][0]->{$_[1]} }
-sub CLEAR    { lock(@{$_[0]}) if is_shared(@{$_[0]}); %{$_[0][0]} = () }
-sub SCALAR   { lock(@{$_[0]}) if is_shared(@{$_[0]}); scalar %{$_[0][0]} }
+sub FIRSTKEY { lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]}); my $a = scalar keys %{$_[0][0]}; each %{$_[0][0]} }
+sub NEXTKEY  { lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]}); each %{$_[0][0]} }
+sub EXISTS   { lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]}); exists $_[0][0]->{$_[1]} }
+sub DELETE   { lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]}); delete $_[0][$#{$_[0]}]->{$_[1]}; delete $_[0][0]->{$_[1]} }
+sub CLEAR    { lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]}); %{$_[0][$#{$_[0]}]} = (); %{$_[0][0]} = () }
+sub SCALAR   { lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]}); scalar %{$_[0][0]} }
 
 sub def
 {
-	lock(@{$_[0]}) if is_shared(@{$_[0]});
+	lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]});
 	my $self = shift;
 	my ($key) = @_;
 	return unless $key =~ /^[^\W\d]\w*\z/s;
