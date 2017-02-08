@@ -476,10 +476,8 @@ sub SCALAR
 
 sub def
 {
-	lock(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) if is_shared(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) and ${$_[0]->[$#{$_[0]}-1]->{$_[1]}};
 	my $self = shift;
 	my ($key) = @_;
-	return unless $key =~ /^[^\W\d]\w*\z/s;
 	unless (exists($self->[$#{$self}]->{$key}))
 	{
 		my $attr = ${"$self->[1]::${context}"}{$key};
