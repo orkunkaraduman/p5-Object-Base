@@ -375,16 +375,19 @@ BEGIN
 sub TIEHASH
 {
 	my $class = shift;
-	my $self = [{}, @_, {}];
+	my $self = [{}, @_, {}, {}];
 	if (${"$self->[1]::${context}"}{":shared"})
 	{
 		$self->[0] = shared_clone($self->[0]);
+		$self->[$#{$self}-1] = shared_clone($self->[$#{$self}-1]);
 		$self->[$#{$self}] = shared_clone($self->[$#{$self}]);
 	}
 	bless $self, $class;
 	for (grep /^[^\W\d]\w*\z/s, keys(%{"$self->[1]::${context}"}))
 	{
 		$self->[0]->{$_} = undef;
+		${$self->[$#{$self}-1]->{$_}} = 1;
+		$self->[$#{$self}]->{$_} = undef;
 		$self->def($_) unless ${"$self->[1]::${context}"}{":lazy"};
 	}
 	$self;
@@ -428,11 +431,25 @@ sub FETCH
 	$self->[0]->{$key};
 }
 
+sub DELETE
+{
+	lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]});
+	delete $_[0][$#{$_[0]}-1]->{$_[1]};
+	delete $_[0][$#{$_[0]}]->{$_[1]};
+	delete $_[0][0]->{$_[1]};
+}
+
+sub CLEAR
+{
+	lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]});
+	%{$_[0][$#{$_[0]}-1]} = ();
+	%{$_[0][$#{$_[0]}]} = ();
+	%{$_[0][0]} = ();
+}
+
 sub FIRSTKEY { lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]}); my $a = scalar keys %{$_[0][0]}; each %{$_[0][0]} }
 sub NEXTKEY  { lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]}); each %{$_[0][0]} }
 sub EXISTS   { lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]}); exists $_[0][0]->{$_[1]} }
-sub DELETE   { lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]}); delete $_[0][$#{$_[0]}]->{$_[1]}; delete $_[0][0]->{$_[1]} }
-sub CLEAR    { lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]}); %{$_[0][$#{$_[0]}]} = (); %{$_[0][0]} = () }
 sub SCALAR   { lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]}); scalar %{$_[0][0]} }
 
 sub def
