@@ -387,8 +387,8 @@ sub TIEHASH
 	{
 		$self->[0]->{$_} = undef;
 		my $p;
-		${$p} = 1;
-		$p = shared_clone($p);
+		${$p} = is_shared(%{$self->[0]})? 1: 0;
+		$p = shared_clone($p) if ${$p};
 		$self->[$#{$self}-1]->{$_} = $p;
 		$self->def($_) unless ${"$self->[1]::${context}"}{":lazy"};
 	}
@@ -441,6 +441,12 @@ sub DELETE
 	delete $_[0][0]->{$_[1]};
 }
 
+sub EXISTS
+{
+	lock(%{$_[0]->[$#{$_[0]}-1]}) if is_shared(%{$_[0]->[$#{$_[0]}-1]});
+	exists $_[0][0]->{$_[1]};
+}
+
 sub CLEAR
 {
 	lock(%{$_[0]->[$#{$_[0]}-1]}) if is_shared(%{$_[0]->[$#{$_[0]}-1]});
@@ -460,12 +466,6 @@ sub NEXTKEY
 {
 	lock(%{$_[0]->[$#{$_[0]}-1]}) if is_shared(%{$_[0]->[$#{$_[0]}-1]});
 	each %{$_[0][0]};
-}
-
-sub EXISTS
-{
-	lock(%{$_[0]->[$#{$_[0]}-1]}) if is_shared(%{$_[0]->[$#{$_[0]}-1]});
-	exists $_[0][0]->{$_[1]};
 }
 
 sub SCALAR
