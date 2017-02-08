@@ -4,7 +4,7 @@ Object::Base - Multi-threaded base class to establish a class deriving relations
 
 # VERSION
 
-version 1.05
+version 1.06
 
 # ABSTRACT
 

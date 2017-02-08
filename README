@@ -3,7 +3,7 @@ NAME
     relationship with parent classes
 
 VERSION
-    version 1.05
+    version 1.06
 
 ABSTRACT
     Multi-threaded base class to establish a class deriving relationship
