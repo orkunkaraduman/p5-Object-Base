@@ -338,6 +338,10 @@ sub new
 	bless $self, $class;
 }
 
+sub DESTROY
+{
+}
+
 
 package Object::Base::TieHash;
 BEGIN
