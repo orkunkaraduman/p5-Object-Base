@@ -387,8 +387,8 @@ sub TIEHASH
 	{
 		$self->[0]->{$_} = undef;
 		my $p;
-		${$p} = is_shared(%{$self->[0]})? 1: 0;
-		$p = shared_clone($p) if ${$p};
+		${$p} = ${"$self->[1]::${context}"}{":shared"}? 1: 0;
+		share(${$p}) if ${$p};
 		$self->[$#{$self}-1]->{$_} = $p;
 		$self->def($_) unless ${"$self->[1]::${context}"}{":lazy"};
 	}
