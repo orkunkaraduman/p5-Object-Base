@@ -1,3 +1,6 @@
+1.05	2017-02-08
+		- Added DESTROY method for calling SUPER in parent overriding
+
 1.04	2017-02-07
 		- Object-based attribute locks
 		- Fix to modifiers

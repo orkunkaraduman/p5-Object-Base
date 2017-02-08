@@ -5,7 +5,7 @@ Object::Base - Multi-threaded base class to establish a class deriving relations
 
 =head1 VERSION
 
-version 1.04
+version 1.05
 
 =head1 ABSTRACT
 
@@ -24,7 +24,7 @@ Object::Base provides blessed and thread-shared(with :shared feature) object wit
 can be used as a constructor and overridable in derived classes. B<new()> should be called in derived class
 constructors to create and bless self-object.
 
-Derived classes own module automatically uses threads, threads::shared, strict, warnings with using Object::Base. If
+Derived classes own package automatically uses threads, threads::shared, strict, warnings with using Object::Base. If
 Perl is not built to support threads; it uses forks, forks::shared instead of threads, threads::shared. Object::Base
 should be loaded as first module.
 
@@ -217,7 +217,7 @@ use warnings;
 BEGIN
 {
 	require 5.008;
-	$Object::Base::VERSION = '1.04';
+	$Object::Base::VERSION = '1.05';
 	$Object::Base::ISA = ();
 }
 
@@ -336,6 +336,10 @@ sub new
 	tie %$self, "${package}::TieHash", $class, \$self;
 	$self = shared_clone($self) if ${"${class}::${context}"}{":shared"};
 	bless $self, $class;
+}
+
+sub DESTROY
+{
 }
 
 
