@@ -256,8 +256,10 @@ EOF
 		"use strict;",
 		"use warnings;",
 		"",
-		"\$${caller}::attributes = undef;",
-		"\*${caller}::attributes = \\\&${package}::attributes;",
+#		"\$${caller}::attributes = undef;",
+#		"\*${caller}::attributes = \\\&${package}::attributes;",
+		(exists(&{"${caller}::attributes"})? "": "sub attributes { ${package}::attributes(\@_) }"),
+		"",
 		"\%${caller}::${context} = () unless defined(\\\%${caller}::${context});",
 		"",
 		(
@@ -281,7 +283,6 @@ EOF
 
 sub attributes
 {
-	die "Attributes can not be defined at run-time" if ${^GLOBAL_PHASE} eq "RUN";
 	my $caller = caller;
 	die "$caller is not $package class" unless UNIVERSAL::isa($caller, $package);
 	%{"${caller}::${context}"} = () unless defined(\%{"${caller}::${context}"});
