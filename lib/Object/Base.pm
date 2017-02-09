@@ -282,7 +282,7 @@ sub attributes
 {
 	my $caller = caller;
 	die "$caller is not $package class" unless UNIVERSAL::isa($caller, $package);
-	die "Attributes can not be defined in subroutine" if caller(1);
+	die "Attributes can not be defined in run-time" if ${^GLOBAL_PHASE} eq "RUN";
 	%{"${caller}::${context}"} = () unless defined(\%{"${caller}::${context}"});
 	my $l;
 	for (@_)
