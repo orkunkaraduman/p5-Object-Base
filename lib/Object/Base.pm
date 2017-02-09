@@ -256,8 +256,6 @@ EOF
 		"use strict;",
 		"use warnings;",
 		"",
-#		"\$${caller}::attributes = undef;",
-#		"\*${caller}::attributes = \\\&${package}::attributes;",
 		(exists(&{"${caller}::attributes"})? "": "sub attributes { ${package}::attributes(\@_) }"),
 		"",
 		"\%${caller}::${context} = () unless defined(\\\%${caller}::${context});",
@@ -310,19 +308,19 @@ sub $_ :lvalue
 	my \$self = shift;
 	die 'Attribute $_ is not defined in $caller' if not defined(\$self) or
 		not UNIVERSAL::isa(ref(\$self), '$package') or
-		not \$${caller}::${context}{"\Q$_\E"};
+		not \$${caller}::${context}{"$_"};
 	my \@args = \@_;
 	if (\@args >= 1)
 	{
 		unless (ref(\$args[0]) and is_shared(%{\$self}))
 		{
-			\$self->{"\Q$_\E"} = \$args[0];
+			\$self->{"$_"} = \$args[0];
 		} else
 		{
-			\$self->{"\Q$_\E"} = shared_clone(\$args[0]);
+			\$self->{"$_"} = shared_clone(\$args[0]);
 		}
 	}
-	\$self->{"\Q$_\E"};
+	\$self->{"$_"};
 }
 EOF
 		} grep { /^[^\W\d]\w*\z/s and not exists(&{"${caller}::$_"}) } keys %{"${caller}::${context}"};
