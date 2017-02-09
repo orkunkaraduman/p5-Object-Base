@@ -232,7 +232,7 @@ sub import
 	die "$package can not be imported at run-time" if ${^GLOBAL_PHASE} eq "RUN";
 	my $importer = shift;
 	my $caller = caller;
-	die "${package}::import() can not import $importer" unless $importer eq $package;
+	return unless $importer eq $package;
 	eval join "\n",
 		"package $caller;",
 		<< "EOF",
