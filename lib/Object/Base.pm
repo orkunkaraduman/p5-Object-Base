@@ -229,9 +229,10 @@ $context =~ s/\Q::\E//g;
 
 sub import
 {
+	die "$package can not be imported at run-time" if ${^GLOBAL_PHASE} eq "RUN";
 	my $importer = shift;
 	my $caller = caller;
-	return unless $importer eq $package;
+	die "${package}::import() can not import $importer" unless $importer eq $package;
 	eval join "\n",
 		"package $caller;",
 		<< "EOF",
@@ -280,9 +281,9 @@ EOF
 
 sub attributes
 {
+	die "Attributes can not be defined at run-time" if ${^GLOBAL_PHASE} eq "RUN";
 	my $caller = caller;
 	die "$caller is not $package class" unless UNIVERSAL::isa($caller, $package);
-	die "Attributes can not be defined in run-time" if ${^GLOBAL_PHASE} eq "RUN";
 	%{"${caller}::${context}"} = () unless defined(\%{"${caller}::${context}"});
 	my $l;
 	for (@_)
