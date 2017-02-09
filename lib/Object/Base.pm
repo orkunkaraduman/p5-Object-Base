@@ -252,6 +252,7 @@ BEGIN
 		forks::shared->import();
 	}
 }
+use SUPER;
 EOF
 		"use strict;",
 		"use warnings;",
