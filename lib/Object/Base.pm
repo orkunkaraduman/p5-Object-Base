@@ -307,9 +307,10 @@ sub attributes
 sub $_ :lvalue
 {
 	my \$self = shift;
-	die 'Attribute $_ is not defined in $caller' if not defined(\$self) or
-		not UNIVERSAL::isa(ref(\$self), '$package') or
-		not \$${caller}::${context}{"$_"};
+	die 'Attribute $_ is not defined in $caller' unless
+		defined(\$self) and
+		UNIVERSAL::isa(ref(\$self), '$package') and
+		\$${caller}::${context}{"$_"};
 	my \@args = \@_;
 	if (\@args >= 1)
 	{
@@ -332,7 +333,10 @@ EOF
 sub new
 {
 	my $class = shift;
-	die "Invalid self-class" unless defined($class) and not ref($class) and UNIVERSAL::isa($class, $package);
+	die "Invalid $package class" unless
+		defined($class) and
+		not ref($class) and
+		UNIVERSAL::isa($class, $package);
 	die "$package context is not defined" unless defined(\%{"${class}::${context}"});
 	my $self = {};
 	tie %$self, "${package}::TieHash", $class, \$self;
