@@ -5,7 +5,7 @@ Object::Base - Multi-threaded base class to establish a class deriving relations
 
 =head1 VERSION
 
-version 1.06
+version 1.07
 
 =head1 ABSTRACT
 
@@ -18,17 +18,17 @@ Multi-threaded base class to establish a class deriving relationship with parent
 	attributes ':shared', 'attr1', 'attr2', ':lazy',
 		'attr3' => {
 			'default' => sub {
-				my ($self, $attr) = @_;
+				my ($self, $key) = @_;
 				$attr3_val = $attr3_def;
 				return $attr3_def;
 			},
 			'getter' => sub {
-				my ($self, $attr, $current_value) = @_;
+				my ($self, $key) = @_;
 				return $attr3_val+1;
 			},
 			'setter' => sub {
-				my ($self, $attr, $current_value, $new_value) = @_;
-				$attr3_val = $new_value-1;
+				my ($self, $key, $value) = @_;
+				$attr3_val = $value-1;
 			},
 		};
 	
@@ -80,6 +80,7 @@ Multi-threaded base class to establish a class deriving relationship with parent
 	# attributes in thread
 	my $thr1 = threads->create(sub { $foo->attr1 = 5; $bar->attr1 = 5; });
 	my $thr2 = threads->create(sub { sleep 1; print "\$foo is shared and attr1: ", $foo->attr1, ", \$bar is not shared and attr1: ", $bar->attr1, "\n"; });
+	# prints '$foo is shared and attr1: 5, $bar is not shared and attr1: 3'
 	$thr1->join();
 	$thr2->join();
 
@@ -139,8 +140,8 @@ getter method of default value of attribute, otherwise value is default value
 	attributes
 		'attr1' => {
 			'default' => sub {
-				my ($self, $attr) = @_;
-				return "default value of $attr";
+				my ($self, $key) = @_;
+				return "default value of $key";
 			},
 		},
 		'attr2' => {
@@ -155,7 +156,7 @@ getter method of attribute
 	attributes
 		'attr1' => {
 			'getter' => sub {
-				my ($self, $attr, $current_value) = @_;
+				my ($self, $key) = @_;
 				return $attr1_val;
 			},
 		};
@@ -168,8 +169,8 @@ setter method of attribute
 	attributes
 		'attr1' => {
 			'setter' => sub {
-				my ($self, $attr, $current_value, $new_value) = @_;
-				$attr1_val = $new_value;
+				my ($self, $key, $value) = @_;
+				$attr1_val = $value;
 			},
 		};
 
@@ -208,7 +209,7 @@ use warnings;
 BEGIN
 {
 	require 5.008;
-	$Object::Base::VERSION = '1.06';
+	$Object::Base::VERSION = '1.07';
 	$Object::Base::ISA = ();
 }
 
@@ -365,7 +366,7 @@ use warnings;
 BEGIN
 {
 	require 5.008;
-	$Object::Base::TieHash::VERSION = $Object::Base::VERSION;
+	$Object::Base::TieHash::VERSION = '1.07';
 }
 
 
@@ -405,7 +406,7 @@ sub STORE
 		my $setter = $attr->{"setter"};
 		if (ref($setter) eq 'CODE')
 		{
-			$setter->(${$self->[2]}, $key, $self->[0]->{$key}, $value);
+			$setter->(${$self->[2]}, $key, $value);
 		}
 	}
 	$self->[0]->{$key} = $value;
@@ -425,7 +426,7 @@ sub FETCH
 		if (ref($getter) eq 'CODE')
 		{
 			my $val;
-			$val = $getter->(${$self->[2]}, $key, $self->[0]->{$key});
+			$val = $getter->(${$self->[2]}, $key);
 			$val = shared_clone($val) if is_shared(%{$self->[0]}) and ref($val) and not is_shared($val);
 			$self->[0]->{$key} = $val;
 		}
@@ -450,7 +451,6 @@ sub DELETE
 
 sub CLEAR
 {
-	#lock(%{$_[0]->[0]}) if is_shared(%{$_[0]->[0]});
 	lock(%{$_[0]->[$#{$_[0]}-1]}) if is_shared(%{$_[0]->[$#{$_[0]}-1]});
 	lock(${$_[0]->[$#{$_[0]}-1]->{$_}}) for (grep is_shared(${$_[0]->[$#{$_[0]}-1]->{$_}}), keys %{$_[0]->[$#{$_[0]}-1]});
 	%{$_[0][$#{$_[0]}-1]} = ();

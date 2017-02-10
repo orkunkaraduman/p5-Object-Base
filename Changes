@@ -1,3 +1,6 @@
+1.07	2017-02-11
+		- Removed current_value in getter/setter
+
 1.06	2017-02-10
 		- Removed locks and key name check in Object::Base::TieHash::def() for performance
 		- Added individual attribute locks
