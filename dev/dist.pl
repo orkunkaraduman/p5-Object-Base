@@ -22,14 +22,14 @@ use FindBin;
 use Cwd;
 
 
-my $module = "Object::Base";
-my $modulePath = "lib/" . $module =~ s/\:\:/\//gr . ".pm";
+#my $podPath = "lib/" . "Object::Base" =~ s/\:\:/\//gr . ".pm";
+my $podPath = "README.pod";
 my $base = "${FindBin::Bin}/..";
 cwd($base);
 
 system("perl Makefile.PL");
-system("pod2markdown --html-encode-chars 1 $modulePath > README.md");
-system("pod2text $modulePath > README");
+system("pod2markdown --html-encode-chars 1 $podPath > README.md");
+system("pod2text $podPath > README");
 system("rm MANIFEST; make manifest");
 system("make dist");
 
