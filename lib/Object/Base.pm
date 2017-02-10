@@ -493,14 +493,17 @@ sub def
 		if (ref($attr) eq 'HASH' and exists($attr->{"default"}))
 		{
 			my $default = $attr->{"default"};
+			my $def;
 			if (ref($default) eq 'CODE')
 			{
-				$self->[$#{$self}]->{$key} = $default->(${$self->[2]}, $key);
+				$def = $default->(${$self->[2]}, $key);
 			} else
 			{
-				$self->[$#{$self}]->{$key} = $default;
+				$def = $default;
 			}
-			$self->[0]{$key} = $self->[$#{$self}]->{$key};
+			$def = shared_clone($def) if is_shared(%{$self->[$#{$self}]}) and ref($def);
+			$self->[$#{$self}]->{$key} = $def;
+			$self->[0]{$key} = $def;
 		}
 	}
 	return $self->[$#{$self}]->{$key};
