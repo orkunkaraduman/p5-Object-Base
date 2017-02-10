@@ -314,7 +314,7 @@ sub $_ :lvalue
 	my \@args = \@_;
 	if (\@args >= 1)
 	{
-		unless (ref(\$args[0]) and is_shared(%{\$self}))
+		unless (is_shared(%{\$self}) and ref(\$args[0]) and not is_shared(\$args[0]))
 		{
 			\$self->{"$_"} = \$args[0];
 		} else
@@ -433,7 +433,10 @@ sub FETCH
 		my $getter = $attr->{"getter"};
 		if (ref($getter) eq 'CODE')
 		{
-			$self->[0]->{$key} = $getter->(${$self->[2]}, $key, $self->[0]->{$key});
+			my $val;
+			$val = $getter->(${$self->[2]}, $key, $self->[0]->{$key});
+			$val = shared_clone($val) if is_shared(%{$self->[0]}) and ref($val) and not is_shared($val);
+			$self->[0]->{$key} = $val;
 		}
 	}
 	$self->[0]->{$key};
@@ -493,17 +496,17 @@ sub def
 		if (ref($attr) eq 'HASH' and exists($attr->{"default"}))
 		{
 			my $default = $attr->{"default"};
-			my $def;
+			my $val;
 			if (ref($default) eq 'CODE')
 			{
-				$def = $default->(${$self->[2]}, $key);
+				$val = $default->(${$self->[2]}, $key);
 			} else
 			{
-				$def = $default;
+				$val = $default;
 			}
-			$def = shared_clone($def) if is_shared(%{$self->[$#{$self}]}) and ref($def);
-			$self->[$#{$self}]->{$key} = $def;
-			$self->[0]{$key} = $def;
+			$val = shared_clone($val) if is_shared(%{$self->[$#{$self}]}) and ref($val) and not is_shared($val);
+			$self->[$#{$self}]->{$key} = $val;
+			$self->[0]{$key} = $val;
 		}
 	}
 	return $self->[$#{$self}]->{$key};

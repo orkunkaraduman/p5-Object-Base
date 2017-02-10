@@ -6,6 +6,8 @@
 		- Calling Object::Base::attributes() at caller's attributes subroutine
 		- Removed some quotemeta for perfomance and they are not needed
 		- Added 'use SUPER;' for child classes
+		- Added shared_clone for default values if it needs
+		- Added 'not is_shared' condition at sub attr, FETCH, def
 
 1.05	2017-02-08
 		- Added DESTROY method for calling SUPER in parent overriding
