@@ -97,6 +97,52 @@ $thr1->join();
 $thr2->join();
 
 
+package SampleException;
+use Object::Base qw(Object::Exception);
+
+package main;
+use Object::Exception;
+
+# Enable DEBUG for traceback
+our $DEBUG = 1;
+
+# throws Object::Exception type and its msg: Exception1
+eval {
+	throw("Exception1");
+};
+if ($@) {
+	warn $@ if ref($@) eq "Object::Exception";
+}
+
+# throws SampleException type and its msg: This is sample exception
+sub sub_exception()
+{
+	SampleException->throw("This is sample exception");
+}
+eval {
+	sub_exception();
+};
+if ($@) {
+	# $@ and $@->message returns same result
+	warn $@->message if ref($@) eq "SampleException";
+}
+
+# throws Object::Exception type and its message: SampleException. Because msg is not defined!
+eval {
+	SampleException->throw();
+};
+if ($@) {
+	if (ref($@) eq "SampleException")
+	{
+		warn $@
+	} else
+	{
+		# warns 'This is type of Object::Exception and its message: SampleException'
+		warn "This is type of ".ref($@)." and its message: $@";
+	}
+}
+
+
 say "OK";
 exit 0;
 __END__

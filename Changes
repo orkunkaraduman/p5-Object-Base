@@ -8,6 +8,7 @@
 		- Added 'use SUPER;' for child classes
 		- Added shared_clone for default values if it needs
 		- Added 'not is_shared' condition at sub attr, FETCH, def
+		- Added Object::Exception
 
 1.05	2017-02-08
 		- Added DESTROY method for calling SUPER in parent overriding
