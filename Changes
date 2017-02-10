@@ -1,3 +1,15 @@
+1.06	2017-02-10
+		- Removed locks and key name check in Object::Base::TieHash::def() for performance
+		- Added individual attribute locks
+		- Improved general locks for thread-safety
+		- Die with 'Object::Base can not be imported at run-time'
+		- Calling Object::Base::attributes() at caller's attributes subroutine
+		- Removed some quotemeta for perfomance and they are not needed
+		- Added 'use SUPER;' for child classes
+		- Added shared_clone for default values if it needs
+		- Added 'not is_shared' condition at sub attr, FETCH, def
+		- Added Object::Exception
+
 1.05	2017-02-08
 		- Added DESTROY method for calling SUPER in parent overriding
 
