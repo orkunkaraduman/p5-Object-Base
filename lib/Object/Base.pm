@@ -5,7 +5,7 @@ Object::Base - Multi-threaded base class to establish a class deriving relations
 
 =head1 VERSION
 
-version 1.07
+version 1.08
 
 =head1 ABSTRACT
 
@@ -209,7 +209,7 @@ use warnings;
 BEGIN
 {
 	require 5.008;
-	$Object::Base::VERSION = '1.07';
+	$Object::Base::VERSION = '1.08';
 	$Object::Base::ISA = ();
 }
 
@@ -383,7 +383,7 @@ sub TIEHASH
 	bless $self, $class;
 	for (grep /^[^\W\d]\w*\z/s, keys(%{"$self->[1]::${context}"}))
 	{
-		$self->[0]->{$_} = undef;
+		#$self->[0]->{$_} = undef;
 		my $p;
 		${$p} = ${"$self->[1]::${context}"}{":shared"}? 1: 0;
 		share(${$p}) if ${$p};
@@ -401,7 +401,7 @@ sub STORE
 	return unless $key =~ /^[^\W\d]\w*\z/s;
 	$self->def($key);
 	my $attr = ${"$self->[1]::${context}"}{$key};
-	if (ref($attr) eq 'HASH' and exists($attr->{"setter"}))
+	if (ref($attr) eq 'HASH' and exists($attr->{"setter"}) and UNIVERSAL::isa(${$self->[2]}, 'UNIVERSAL'))
 	{
 		my $setter = $attr->{"setter"};
 		if (ref($setter) eq 'CODE')
@@ -420,7 +420,7 @@ sub FETCH
 	return unless $key =~ /^[^\W\d]\w*\z/s;
 	$self->def($key);
 	my $attr = ${"$self->[1]::${context}"}{$key};
-	if (ref($attr) eq 'HASH' and exists($attr->{"getter"}))
+	if (ref($attr) eq 'HASH' and exists($attr->{"getter"}) and UNIVERSAL::isa(${$self->[2]}, 'UNIVERSAL'))
 	{
 		my $getter = $attr->{"getter"};
 		if (ref($getter) eq 'CODE')
