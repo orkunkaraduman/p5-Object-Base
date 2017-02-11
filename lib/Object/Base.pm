@@ -366,7 +366,7 @@ use warnings;
 BEGIN
 {
 	require 5.008;
-	$Object::Base::TieHash::VERSION = '1.07';
+	$Object::Base::TieHash::VERSION = '1.08';
 }
 
 
@@ -383,6 +383,7 @@ sub TIEHASH
 	bless $self, $class;
 	for (grep /^[^\W\d]\w*\z/s, keys(%{"$self->[1]::${context}"}))
 	{
+		$self->[0]->{$_} = undef;
 		my $p;
 		${$p} = ${"$self->[1]::${context}"}{":shared"}? 1: 0;
 		share(${$p}) if ${$p};
