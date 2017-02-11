@@ -1,6 +1,5 @@
 1.08	2017-02-11
 		- Bug fix: Calling getter at unblessed moment
-		- Lazy init object attrs
 		- Added traceback, dump_trace functions in Object::Exception
 
 1.07	2017-02-11
