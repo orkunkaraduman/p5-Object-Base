@@ -5,7 +5,7 @@ Object::Exception - Multi-threaded base exception class
 
 =head1 VERSION
 
-version 1.06
+version 1.08
 
 =head1 ABSTRACT
 
@@ -64,7 +64,7 @@ use overload '""' => \&message;
 BEGIN
 {
 	require 5.008;
-	$Object::Exception::VERSION = '1.06';
+	$Object::Exception::VERSION = '1.08';
 	@Object::Exception::EXPORT = qw(throw);
 }
 
@@ -86,6 +86,47 @@ sub new
 	return $self;
 }
 
+sub traceback
+{
+	my ($i) = @_;
+	$i = 0 unless defined($i);
+	my @result;
+	while (scalar(my @caller = caller($i++)))
+	{
+		my @a;
+		my @caller_next = caller($i);
+		@a = split "::", $caller_next[3];
+		my $sub = $a[$#a];
+		push @result, {
+			package => $caller[0],
+			filename => $caller[1],
+			line => $caller[2],
+			subroutine => $sub,
+		};
+	}
+	return @result;
+}
+
+sub dump_trace
+{
+	my @trace = @_;
+	my $result = "";
+	my $i = 0;
+	for my $trace (reverse @trace)
+	{
+		$result .= sprintf("%-".((++$i)*2)."s", "");
+		$result .= "in $trace->{package} ";
+		$result .= "at ";
+		$result .= "$trace->{subroutine} " if defined($trace->{subroutine});
+		$result .= "$trace->{filename} ";
+		$result .= "line $trace->{line}\n";
+	} continue
+	{
+		$i++;
+	}
+	return $result;
+}
+
 sub throw
 {
 	my $class;
@@ -99,20 +140,8 @@ sub throw
 	my ($msg) = @_;
 	return unless defined($class) and not ref($class) and UNIVERSAL::isa($class, __PACKAGE__);
 	my $self = $class->new($msg);
-	my $i = 0;
-	while (scalar(my @caller = caller($i++)))
-	{
-		my @a;
-		my @caller_next = caller($i);
-		@a = split "::", $caller_next[3];
-		my $sub = $a[$#a];
-		$self->trace->[$i-1] = shared_clone {
-			package => $caller[0],
-			filename => $caller[1],
-			line => $caller[2],
-			subroutine => $sub,
-		};
-	}
+	my @trace = traceback(1);
+	$self->trace(\@trace);
 	die $self;
 }
 
@@ -125,19 +154,7 @@ sub message
 	my $result = "";
 	$result .= "$msg\n" if defined($msg) and not ref($msg);
 	return $result unless $debug;
-	my $i = 0;
-	for my $trace (reverse @{$self->trace})
-	{
-		$result .= sprintf("%-".((++$i)*2)."s", "");
-		$result .= "in $trace->{package} ";
-		$result .= "at ";
-		$result .= "$trace->{subroutine} " if defined($trace->{subroutine});
-		$result .= "$trace->{filename} ";
-		$result .= "line $trace->{line}\n";
-	} continue
-	{
-		$i++;
-	}
+	$result .= dump_trace(@{$self->trace});
 	return $result;
 }
 
