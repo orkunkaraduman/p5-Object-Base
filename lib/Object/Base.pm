@@ -383,7 +383,6 @@ sub TIEHASH
 	bless $self, $class;
 	for (grep /^[^\W\d]\w*\z/s, keys(%{"$self->[1]::${context}"}))
 	{
-		#$self->[0]->{$_} = undef;
 		my $p;
 		${$p} = ${"$self->[1]::${context}"}{":shared"}? 1: 0;
 		share(${$p}) if ${$p};
@@ -483,11 +482,11 @@ sub def
 	my ($key) = @_;
 	unless (exists($self->[$#{$self}]->{$key}))
 	{
+		my $val = undef;
 		my $attr = ${"$self->[1]::${context}"}{$key};
 		if (ref($attr) eq 'HASH' and exists($attr->{"default"}))
 		{
 			my $default = $attr->{"default"};
-			my $val;
 			if (ref($default) eq 'CODE')
 			{
 				$val = $default->(${$self->[2]}, $key);
@@ -496,9 +495,9 @@ sub def
 				$val = $default;
 			}
 			$val = shared_clone($val) if is_shared(%{$self->[$#{$self}]}) and ref($val) and not is_shared($val);
-			$self->[$#{$self}]->{$key} = $val;
-			$self->[0]{$key} = $val;
 		}
+		$self->[$#{$self}]->{$key} = $val;
+		$self->[0]->{$key} = $val;
 	}
 	return $self->[$#{$self}]->{$key};
 }
