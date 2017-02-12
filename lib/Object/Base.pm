@@ -331,7 +331,7 @@ sub new
 		UNIVERSAL::isa($class, $package);
 	die "$package context is not defined" unless defined(\%{"${class}::${context}"});
 	my $self = {};
-	tie %$self, "${package}::TieHash", $class, \$self;
+	tie %$self, "${package}::TieHash", $class, \$self unless ${"${class}::${context}"}{":shared"};
 	$self = shared_clone($self) if ${"${class}::${context}"}{":shared"};
 	bless $self, $class;
 }
@@ -373,21 +373,11 @@ BEGIN
 sub TIEHASH
 {
 	my $class = shift;
-	my $self = [{}, @_, {}, {}];
-	if (${"$self->[1]::${context}"}{":shared"})
-	{
-		$self->[0] = shared_clone($self->[0]);
-		$self->[$#{$self}-1] = shared_clone($self->[$#{$self}-1]);
-		$self->[$#{$self}] = shared_clone($self->[$#{$self}]);
-	}
+	my $self = [{}, @_, {}];
 	bless $self, $class;
 	for (grep /^[^\W\d]\w*\z/s, keys(%{"$self->[1]::${context}"}))
 	{
 		$self->[0]->{$_} = undef;
-		my $p;
-		${$p} = ${"$self->[1]::${context}"}{":shared"}? 1: 0;
-		share(${$p}) if ${$p};
-		$self->[$#{$self}-1]->{$_} = $p;
 		$self->def($_) unless ${"$self->[1]::${context}"}{":lazy"};
 	}
 	$self;
@@ -395,13 +385,12 @@ sub TIEHASH
 
 sub STORE
 {
-	lock(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) if is_shared(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) and ${$_[0]->[$#{$_[0]}-1]->{$_[1]}};
 	my $self = shift;
 	my ($key, $value) = @_;
 	return unless $key =~ /^[^\W\d]\w*\z/s;
 	$self->def($key);
 	my $attr = ${"$self->[1]::${context}"}{$key};
-	if (ref($attr) eq 'HASH' and exists($attr->{"setter"}) and UNIVERSAL::isa(${$self->[2]}, 'UNIVERSAL'))
+	if (ref($attr) eq 'HASH' and exists($attr->{"setter"}))
 	{
 		my $setter = $attr->{"setter"};
 		if (ref($setter) eq 'CODE')
@@ -414,21 +403,17 @@ sub STORE
 
 sub FETCH
 {
-	lock(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) if is_shared(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) and ${$_[0]->[$#{$_[0]}-1]->{$_[1]}};
 	my $self = shift;
 	my ($key) = @_;
 	return unless $key =~ /^[^\W\d]\w*\z/s;
 	$self->def($key);
 	my $attr = ${"$self->[1]::${context}"}{$key};
-	if (ref($attr) eq 'HASH' and exists($attr->{"getter"}) and UNIVERSAL::isa(${$self->[2]}, 'UNIVERSAL'))
+	if (ref($attr) eq 'HASH' and exists($attr->{"getter"}))
 	{
 		my $getter = $attr->{"getter"};
 		if (ref($getter) eq 'CODE')
 		{
-			my $val;
-			$val = $getter->(${$self->[2]}, $key);
-			$val = shared_clone($val) if is_shared(%{$self->[0]}) and ref($val) and not is_shared($val);
-			$self->[0]->{$key} = $val;
+			$self->[0]->{$key} = $getter->(${$self->[2]}, $key);
 		}
 	}
 	$self->[0]->{$key};
@@ -436,44 +421,34 @@ sub FETCH
 
 sub EXISTS
 {
-	lock(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) if is_shared(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) and ${$_[0]->[$#{$_[0]}-1]->{$_[1]}};
 	exists $_[0][0]->{$_[1]};
 }
 
 sub DELETE
 {
-	lock(%{$_[0]->[$#{$_[0]}-1]}) if is_shared(%{$_[0]->[$#{$_[0]}-1]});
-	lock(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) if is_shared(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) and ${$_[0]->[$#{$_[0]}-1]->{$_[1]}};
-	delete $_[0][$#{$_[0]}-1]->{$_[1]};
 	delete $_[0][$#{$_[0]}]->{$_[1]};
 	delete $_[0][0]->{$_[1]};
 }
 
 sub CLEAR
 {
-	lock(%{$_[0]->[$#{$_[0]}-1]}) if is_shared(%{$_[0]->[$#{$_[0]}-1]});
-	lock(${$_[0]->[$#{$_[0]}-1]->{$_}}) for (grep is_shared(${$_[0]->[$#{$_[0]}-1]->{$_}}), keys %{$_[0]->[$#{$_[0]}-1]});
-	%{$_[0][$#{$_[0]}-1]} = ();
 	%{$_[0][$#{$_[0]}]} = ();
 	%{$_[0][0]} = ();
 }
 
 sub FIRSTKEY
 {
-	lock(%{$_[0]->[$#{$_[0]}-1]}) if is_shared(%{$_[0]->[$#{$_[0]}-1]});
 	my $a = scalar keys %{$_[0][0]};
 	each %{$_[0][0]};
 }
 
 sub NEXTKEY
 {
-	lock(%{$_[0]->[$#{$_[0]}-1]}) if is_shared(%{$_[0]->[$#{$_[0]}-1]});
 	each %{$_[0][0]};
 }
 
 sub SCALAR
 {
-	lock(%{$_[0]->[$#{$_[0]}-1]}) if is_shared(%{$_[0]->[$#{$_[0]}-1]});
 	scalar %{$_[0][0]};
 }
 
@@ -495,7 +470,6 @@ sub def
 			{
 				$val = $default;
 			}
-			$val = shared_clone($val) if is_shared(%{$self->[$#{$self}]}) and ref($val) and not is_shared($val);
 		}
 		$self->[$#{$self}]->{$key} = $val;
 		$self->[0]->{$key} = $val;
