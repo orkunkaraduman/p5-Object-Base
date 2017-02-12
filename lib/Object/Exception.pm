@@ -69,11 +69,7 @@ BEGIN
 }
 
 
-attributes qw(:shared msg debug), 
-	trace => {
-		default => [],
-	}
-;
+attributes qw(:shared msg debug trace);
 
 
 sub new
