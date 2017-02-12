@@ -1,6 +1,6 @@
 1.08	2017-02-12
 		- Added traceback, dump_trace functions in Object::Exception
-		- Attribute modifiers don't work with ':shared' feature.
+		- Attribute modifiers don't work with ':shared' feature
 
 1.07	2017-02-11
 		- Removed current_value in getter/setter
