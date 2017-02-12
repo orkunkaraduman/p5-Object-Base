@@ -120,6 +120,7 @@ sub dump_trace
 	{
 		$i++;
 	}
+	chomp($result);
 	return $result;
 }
 
@@ -148,9 +149,9 @@ sub message
 	$debug = $self->debug unless defined($debug);
 	my $msg = $self->msg;
 	my $result = "";
-	$result .= "$msg\n" if defined($msg) and not ref($msg);
+	$result .= "$msg" if defined($msg) and not ref($msg);
 	return $result unless $debug;
-	$result .= dump_trace(@{$self->trace});
+	$result .= "\n".dump_trace(@{$self->trace});
 	return $result;
 }
 
