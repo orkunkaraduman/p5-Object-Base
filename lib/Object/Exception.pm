@@ -64,7 +64,7 @@ use overload '""' => \&message;
 BEGIN
 {
 	require 5.008;
-	$Object::Exception::VERSION = '1.08';
+	$Object::Exception::VERSION = '1.09';
 	@Object::Exception::EXPORT = qw(throw);
 }
 
@@ -79,6 +79,7 @@ sub new
 	my $self = $class->SUPER();
 	$self->msg = $msg;
 	$self->debug = (defined($main::DEBUG) and $main::DEBUG)? 1: 0;
+	$self->trace([]);
 	return $self;
 }
 
@@ -89,15 +90,12 @@ sub traceback
 	my @result;
 	while (scalar(my @caller = caller($i++)))
 	{
-		my @a;
 		my @caller_next = caller($i);
-		@a = split "::", $caller_next[3];
-		my $sub = $a[$#a];
 		push @result, {
 			package => $caller[0],
 			filename => $caller[1],
 			line => $caller[2],
-			subroutine => $sub,
+			subroutine => $caller_next[3],
 		};
 	}
 	return @result;
@@ -120,7 +118,6 @@ sub dump_trace
 	{
 		$i++;
 	}
-	chomp($result);
 	return $result;
 }
 
@@ -136,8 +133,22 @@ sub throw
 	}
 	my ($msg) = @_;
 	return unless defined($class) and not ref($class) and UNIVERSAL::isa($class, __PACKAGE__);
+	my @trace;
+	if (ref($msg))
+	{
+		return unless UNIVERSAL::isa($msg, __PACKAGE__);
+		unshift @trace, @{$msg->trace};
+		$msg = $msg->msg;
+	}
 	my $self = $class->new($msg);
-	my @trace = traceback(1);
+	my @traceback = traceback(1);
+	unless (@trace)
+	{
+		unshift @trace, @traceback;
+	} else
+	{
+		unshift @trace, $traceback[0];
+	}
 	$self->trace(\@trace);
 	die $self;
 }
@@ -149,9 +160,9 @@ sub message
 	$debug = $self->debug unless defined($debug);
 	my $msg = $self->msg;
 	my $result = "";
-	$result .= "$msg" if defined($msg) and not ref($msg);
+	$result .= "$msg\n" if defined($msg) and not ref($msg);
 	return $result unless $debug;
-	$result .= "\n".dump_trace(@{$self->trace});
+	$result .= dump_trace(@{$self->trace});
 	return $result;
 }
 
