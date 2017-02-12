@@ -128,10 +128,6 @@ Inheritable
 
 Overridable
 
-=item *
-
-Redefinable
-
 =back
 
 =head3 Modifiers
@@ -183,7 +179,7 @@ setter method of attribute
 
 =head4 :shared
 
-Class will be craated as thread-shared. But attribute modifiers don't work.
+Class will be craated as thread-shared. But attribute modifiers don't work with ':shared' feature.
 
 =head4 :lazy
 
