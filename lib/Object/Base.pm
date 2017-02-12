@@ -5,7 +5,7 @@ Object::Base - Multi-threaded base class to establish a class deriving relations
 
 =head1 VERSION
 
-version 1.07
+version 1.08
 
 =head1 ABSTRACT
 
@@ -13,28 +13,32 @@ Multi-threaded base class to establish a class deriving relationship with parent
 
 	package Foo;
 	use Object::Base;
+	attributes ':shared', 'attr1', 'attr2';
+	
+	package Bar;
+	use Object::Base 'Foo';
 	my $attr3_def = 6;
 	my $attr3_val;
-	attributes ':shared', 'attr1', 'attr2', ':lazy',
+	attributes ':shared' => undef, 'attr2' => undef, ':lazy',
 		'attr3' => {
 			'default' => sub {
 				my ($self, $key) = @_;
-				$attr3_val = $attr3_def;
+				print "> default key=$key\n";
+				$attr3_val = $attr3_def-1;
 				return $attr3_def;
 			},
 			'getter' => sub {
 				my ($self, $key) = @_;
+				print "> getter key=$key\n";
 				return $attr3_val+1;
 			},
 			'setter' => sub {
 				my ($self, $key, $value) = @_;
+				print "> setter key=$key value=$value\n";
 				$attr3_val = $value-1;
 			},
-		};
-	
-	package Bar;
-	use Object::Base 'Foo';
-	attributes 'attr3', ':shared' => undef, 'attr2' => undef;
+		}
+	;
 	
 	package main;
 	use threads;
@@ -42,6 +46,9 @@ Multi-threaded base class to establish a class deriving relationship with parent
 	
 	# object of Foo
 	my $foo = Foo->new();
+	
+	# special attribute ':shared'
+	print "\$foo is ", is_shared($foo)? "shared": "not shared", "\n";
 	
 	# usage of attribute
 	$foo->attr1(1);
@@ -51,31 +58,33 @@ Multi-threaded base class to establish a class deriving relationship with parent
 	$foo->attr1++;
 	print $foo->attr1, "\n"; # prints '2'
 	
-	# special attribute ':shared'
-	print "\$foo is ", is_shared($foo)? "shared": "not shared", "\n";
-	
-	# attributes can have modifiers: default, getter, setter
-	print "attr3 value ", $foo->attr3, " and stored as $attr3_val", "\n"; # prints 'attr3 value 7 and stored as 6'
-	
-	# object of derived class Bar
-	my $bar = Bar->new();
-	
-	# attributes can be added derived classes
-	$bar->attr3(3);
-	
-	# attributes are inheritable
-	$bar->attr1(3);
-	
-	# attributes are overridable #1
-	eval { $bar->attr2 = 4 }; print "Eval: $@"; # prints error 'Eval: Attribute attr2 is not defined in Bar at ...'
-	
-	# attributes are overridable #2
-	print "\$bar is ", is_shared($bar)? "shared": "not shared", "\n"; # prints '$bar is not shared'
-	
 	# assigning ref values to shared class attributes
 	eval { $foo->attr2 = { key1 => 'val1' } }; print "Eval: $@"; # prints error 'Eval: Invalid value for shared scalar at ...'
 	$foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
 	print $foo->attr2->{key2}, "\n"; # prints 'val2'
+	
+	# object of derived class Bar
+	my $bar = Bar->new();
+	
+	# features are overridable
+	print "\$bar is ", is_shared($bar)? "shared": "not shared", "\n"; # prints '$bar is not shared'
+	
+	# attributes can be added derived classes
+	# attributes can have modifiers: default
+	print "attr3 default value is ", $bar->attr3, "\n"; # prints 'attr3 default value is 6'
+	
+	# attributes can have modifiers: setter
+	$bar->attr3 = 3;
+	print "attr3 set", "\n";
+	
+	# attributes can have modifiers: getter
+	print "attr3 value ", $bar->attr3, " and stored as $attr3_val", "\n"; # prints 'attr3 value 3 and stored as 2'
+	
+	# attributes are inheritable
+	$bar->attr1(3);
+	
+	# attributes are overridable
+	eval { $bar->attr2 = 4 }; print "Eval: $@"; # prints error 'Eval: Attribute attr2 is not defined in Bar at ...'
 	
 	# attributes in thread
 	my $thr1 = threads->create(sub { $foo->attr1 = 5; $bar->attr1 = 5; });
@@ -119,19 +128,11 @@ Inheritable
 
 Overridable
 
-=item *
-
-Redefinable
-
-=item *
-
-Thread-Safe
-
 =back
 
 =head3 Modifiers
 
-Attributes can have their own modifiers in hash reference at definition.
+Attributes can have their own modifiers in hash reference at definition. Attribute modifiers don't work with ':shared' feature.
 
 =head4 default
 
@@ -178,11 +179,11 @@ setter method of attribute
 
 =head4 :shared
 
-Class will be craated as thread-shared.
+Class will be craated as thread-shared. But attribute modifiers don't work with ':shared' feature.
 
 =head4 :lazy
 
-Attributes will be initialized with default values at first fetching or storing instead of object construction with new().
+Attributes will be initialized with default values using default modifier at first fetching or storing instead of object construction with new().
 
 =cut
 BEGIN
@@ -209,7 +210,7 @@ use warnings;
 BEGIN
 {
 	require 5.008;
-	$Object::Base::VERSION = '1.07';
+	$Object::Base::VERSION = '1.08';
 	$Object::Base::ISA = ();
 }
 
@@ -331,7 +332,7 @@ sub new
 		UNIVERSAL::isa($class, $package);
 	die "$package context is not defined" unless defined(\%{"${class}::${context}"});
 	my $self = {};
-	tie %$self, "${package}::TieHash", $class, \$self;
+	tie %$self, "${package}::TieHash", $class, \$self unless ${"${class}::${context}"}{":shared"};
 	$self = shared_clone($self) if ${"${class}::${context}"}{":shared"};
 	bless $self, $class;
 }
@@ -366,28 +367,18 @@ use warnings;
 BEGIN
 {
 	require 5.008;
-	$Object::Base::TieHash::VERSION = '1.07';
+	$Object::Base::TieHash::VERSION = '1.08';
 }
 
 
 sub TIEHASH
 {
 	my $class = shift;
-	my $self = [{}, @_, {}, {}];
-	if (${"$self->[1]::${context}"}{":shared"})
-	{
-		$self->[0] = shared_clone($self->[0]);
-		$self->[$#{$self}-1] = shared_clone($self->[$#{$self}-1]);
-		$self->[$#{$self}] = shared_clone($self->[$#{$self}]);
-	}
+	my $self = [{}, @_, {}];
 	bless $self, $class;
 	for (grep /^[^\W\d]\w*\z/s, keys(%{"$self->[1]::${context}"}))
 	{
 		$self->[0]->{$_} = undef;
-		my $p;
-		${$p} = ${"$self->[1]::${context}"}{":shared"}? 1: 0;
-		share(${$p}) if ${$p};
-		$self->[$#{$self}-1]->{$_} = $p;
 		$self->def($_) unless ${"$self->[1]::${context}"}{":lazy"};
 	}
 	$self;
@@ -395,7 +386,6 @@ sub TIEHASH
 
 sub STORE
 {
-	lock(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) if is_shared(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) and ${$_[0]->[$#{$_[0]}-1]->{$_[1]}};
 	my $self = shift;
 	my ($key, $value) = @_;
 	return unless $key =~ /^[^\W\d]\w*\z/s;
@@ -414,7 +404,6 @@ sub STORE
 
 sub FETCH
 {
-	lock(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) if is_shared(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) and ${$_[0]->[$#{$_[0]}-1]->{$_[1]}};
 	my $self = shift;
 	my ($key) = @_;
 	return unless $key =~ /^[^\W\d]\w*\z/s;
@@ -425,10 +414,7 @@ sub FETCH
 		my $getter = $attr->{"getter"};
 		if (ref($getter) eq 'CODE')
 		{
-			my $val;
-			$val = $getter->(${$self->[2]}, $key);
-			$val = shared_clone($val) if is_shared(%{$self->[0]}) and ref($val) and not is_shared($val);
-			$self->[0]->{$key} = $val;
+			$self->[0]->{$key} = $getter->(${$self->[2]}, $key);
 		}
 	}
 	$self->[0]->{$key};
@@ -436,44 +422,34 @@ sub FETCH
 
 sub EXISTS
 {
-	lock(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) if is_shared(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) and ${$_[0]->[$#{$_[0]}-1]->{$_[1]}};
 	exists $_[0][0]->{$_[1]};
 }
 
 sub DELETE
 {
-	lock(%{$_[0]->[$#{$_[0]}-1]}) if is_shared(%{$_[0]->[$#{$_[0]}-1]});
-	lock(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) if is_shared(${$_[0]->[$#{$_[0]}-1]->{$_[1]}}) and ${$_[0]->[$#{$_[0]}-1]->{$_[1]}};
-	delete $_[0][$#{$_[0]}-1]->{$_[1]};
 	delete $_[0][$#{$_[0]}]->{$_[1]};
 	delete $_[0][0]->{$_[1]};
 }
 
 sub CLEAR
 {
-	lock(%{$_[0]->[$#{$_[0]}-1]}) if is_shared(%{$_[0]->[$#{$_[0]}-1]});
-	lock(${$_[0]->[$#{$_[0]}-1]->{$_}}) for (grep is_shared(${$_[0]->[$#{$_[0]}-1]->{$_}}), keys %{$_[0]->[$#{$_[0]}-1]});
-	%{$_[0][$#{$_[0]}-1]} = ();
 	%{$_[0][$#{$_[0]}]} = ();
 	%{$_[0][0]} = ();
 }
 
 sub FIRSTKEY
 {
-	lock(%{$_[0]->[$#{$_[0]}-1]}) if is_shared(%{$_[0]->[$#{$_[0]}-1]});
 	my $a = scalar keys %{$_[0][0]};
 	each %{$_[0][0]};
 }
 
 sub NEXTKEY
 {
-	lock(%{$_[0]->[$#{$_[0]}-1]}) if is_shared(%{$_[0]->[$#{$_[0]}-1]});
 	each %{$_[0][0]};
 }
 
 sub SCALAR
 {
-	lock(%{$_[0]->[$#{$_[0]}-1]}) if is_shared(%{$_[0]->[$#{$_[0]}-1]});
 	scalar %{$_[0][0]};
 }
 
@@ -483,11 +459,11 @@ sub def
 	my ($key) = @_;
 	unless (exists($self->[$#{$self}]->{$key}))
 	{
+		my $val = undef;
 		my $attr = ${"$self->[1]::${context}"}{$key};
 		if (ref($attr) eq 'HASH' and exists($attr->{"default"}))
 		{
 			my $default = $attr->{"default"};
-			my $val;
 			if (ref($default) eq 'CODE')
 			{
 				$val = $default->(${$self->[2]}, $key);
@@ -495,10 +471,9 @@ sub def
 			{
 				$val = $default;
 			}
-			$val = shared_clone($val) if is_shared(%{$self->[$#{$self}]}) and ref($val) and not is_shared($val);
-			$self->[$#{$self}]->{$key} = $val;
-			$self->[0]{$key} = $val;
 		}
+		$self->[$#{$self}]->{$key} = $val;
+		$self->[0]->{$key} = $val;
 	}
 	return $self->[$#{$self}]->{$key};
 }
