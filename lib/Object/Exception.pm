@@ -137,6 +137,7 @@ sub throw
 	if (ref($msg))
 	{
 		return unless UNIVERSAL::isa($msg, __PACKAGE__);
+		$class = ref($msg) if $class eq __PACKAGE__;
 		unshift @trace, @{$msg->trace};
 		$msg = $msg->msg;
 	}
