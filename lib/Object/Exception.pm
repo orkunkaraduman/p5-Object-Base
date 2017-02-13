@@ -77,7 +77,7 @@ sub new
 	my $class = shift;
 	my ($msg) = @_;
 	my $self = $class->SUPER();
-	$self->msg = $msg;
+	$self->msg($msg);
 	$self->debug = (defined($main::DEBUG) and $main::DEBUG)? 1: 0;
 	$self->trace([]);
 	return $self;
