@@ -86,7 +86,7 @@ sub new
 sub traceback
 {
 	my ($i) = @_;
-	$i = 0 unless defined($i);
+	$i = 0 unless defined($i) and $i >= 0;
 	my @result;
 	while (scalar(my @caller = caller($i++)))
 	{
@@ -131,7 +131,7 @@ sub throw
 	{
 		$class = __PACKAGE__;
 	}
-	my ($msg) = @_;
+	my ($msg, $tracelevel) = @_;
 	return unless defined($class) and not ref($class) and UNIVERSAL::isa($class, __PACKAGE__);
 	my @trace;
 	if (ref($msg))
@@ -142,7 +142,9 @@ sub throw
 		$msg = $msg->msg;
 	}
 	my $self = $class->new($msg);
-	my @traceback = traceback(1);
+	$tracelevel = 0 unless defined($tracelevel);
+	$tracelevel++;
+	my @traceback = traceback($tracelevel);
 	unless (@trace)
 	{
 		unshift @trace, @traceback;
