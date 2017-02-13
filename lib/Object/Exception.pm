@@ -105,10 +105,10 @@ sub dump_trace
 {
 	my @trace = @_;
 	my $result = "";
-	my $i = 0;
+	my $i = 1;
 	for my $trace (reverse @trace)
 	{
-		$result .= sprintf("%-".((++$i)*2)."s", "");
+		$result .= sprintf("%-".($i*1)."s", "");
 		$result .= "in $trace->{package} ";
 		$result .= "at ";
 		$result .= "$trace->{subroutine} " if defined($trace->{subroutine});
