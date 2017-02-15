@@ -128,6 +128,14 @@ Inheritable
 
 Overridable
 
+=item *
+
+Redefinable
+
+=item *
+
+Not thread-safe
+
 =back
 
 =head3 Modifiers
@@ -488,6 +496,16 @@ __END__
 B<GitHub> L<https://github.com/orkunkaraduman/p5-Object-Base>
 
 B<CPAN> L<https://metacpan.org/release/Object-Base>
+
+=head1 SEE ALSO
+
+=over
+
+=item *
+
+L<Object::Exception|https://metacpan.org/pod/Object::Exception>
+
+=back
 
 =head1 AUTHOR
 

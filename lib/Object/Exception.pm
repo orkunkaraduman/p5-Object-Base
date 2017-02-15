@@ -178,6 +178,16 @@ B<GitHub> L<https://github.com/orkunkaraduman/p5-Object-Base>
 
 B<CPAN> L<https://metacpan.org/release/Object-Base>
 
+=head1 SEE ALSO
+
+=over
+
+=item *
+
+L<Object::Base|https://metacpan.org/pod/Object::Base>
+
+=back
+
 =head1 AUTHOR
 
 Orkun Karaduman <orkunkaraduman@gmail.com>
