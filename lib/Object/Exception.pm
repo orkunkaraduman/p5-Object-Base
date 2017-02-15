@@ -5,7 +5,7 @@ Object::Exception - Multi-threaded base exception class
 
 =head1 VERSION
 
-version 1.08
+version 1.09
 
 =head1 ABSTRACT
 
