@@ -5,12 +5,13 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
 	NAME				=> 'Object::Base',
-	VERSION				=> '1.08',
+	VERSION				=> '1.09',
 	MIN_PERL_VERSION	=> '5.008',
 	PREREQ_PM			=> {
 		'threads'		=> '1.72',
 		'threads::shared' => '1.28',
-		'forks'		=> '0.29',
+		'forks'			=> '0.29',
+		'SUPER'			=> '1.20141117',
 	},
 	EXE_FILES			=> [qw(
 	)],

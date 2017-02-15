@@ -5,7 +5,7 @@ Object::Exception - Multi-threaded base exception class
 
 =head1 VERSION
 
-version 1.08
+version 1.09
 
 =head1 ABSTRACT
 
@@ -64,16 +64,12 @@ use overload '""' => \&message;
 BEGIN
 {
 	require 5.008;
-	$Object::Exception::VERSION = '1.08';
+	$Object::Exception::VERSION = '1.09';
 	@Object::Exception::EXPORT = qw(throw);
 }
 
 
-attributes qw(:shared msg debug), 
-	trace => {
-		default => [],
-	}
-;
+attributes qw(:shared msg debug trace);
 
 
 sub new
@@ -81,27 +77,25 @@ sub new
 	my $class = shift;
 	my ($msg) = @_;
 	my $self = $class->SUPER();
-	$self->msg = $msg;
+	$self->msg($msg);
 	$self->debug = (defined($main::DEBUG) and $main::DEBUG)? 1: 0;
+	$self->trace([]);
 	return $self;
 }
 
 sub traceback
 {
 	my ($i) = @_;
-	$i = 0 unless defined($i);
+	$i = 0 unless defined($i) and $i >= 0;
 	my @result;
 	while (scalar(my @caller = caller($i++)))
 	{
-		my @a;
 		my @caller_next = caller($i);
-		@a = split "::", $caller_next[3];
-		my $sub = $a[$#a];
 		push @result, {
 			package => $caller[0],
 			filename => $caller[1],
 			line => $caller[2],
-			subroutine => $sub,
+			subroutine => $caller_next[3],
 		};
 	}
 	return @result;
@@ -111,10 +105,10 @@ sub dump_trace
 {
 	my @trace = @_;
 	my $result = "";
-	my $i = 0;
+	my $i = 1;
 	for my $trace (reverse @trace)
 	{
-		$result .= sprintf("%-".((++$i)*2)."s", "");
+		$result .= sprintf("%-".($i*1)."s", "");
 		$result .= "in $trace->{package} ";
 		$result .= "at ";
 		$result .= "$trace->{subroutine} " if defined($trace->{subroutine});
@@ -137,10 +131,27 @@ sub throw
 	{
 		$class = __PACKAGE__;
 	}
-	my ($msg) = @_;
+	my ($msg, $tracelevel) = @_;
 	return unless defined($class) and not ref($class) and UNIVERSAL::isa($class, __PACKAGE__);
+	my @trace;
+	if (ref($msg))
+	{
+		return unless UNIVERSAL::isa($msg, __PACKAGE__);
+		$class = ref($msg) if $class eq __PACKAGE__;
+		unshift @trace, @{$msg->trace};
+		$msg = $msg->msg;
+	}
 	my $self = $class->new($msg);
-	my @trace = traceback(1);
+	$tracelevel = 0 unless defined($tracelevel);
+	$tracelevel++;
+	my @traceback = traceback($tracelevel);
+	unless (@trace)
+	{
+		unshift @trace, @traceback;
+	} else
+	{
+		unshift @trace, $traceback[0];
+	}
 	$self->trace(\@trace);
 	die $self;
 }
@@ -166,6 +177,16 @@ __END__
 B<GitHub> L<https://github.com/orkunkaraduman/p5-Object-Base>
 
 B<CPAN> L<https://metacpan.org/release/Object-Base>
+
+=head1 SEE ALSO
+
+=over
+
+=item *
+
+L<Object::Base|https://metacpan.org/pod/Object::Base>
+
+=back
 
 =head1 AUTHOR
 

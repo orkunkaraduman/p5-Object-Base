@@ -153,6 +153,7 @@ This module requires these other modules and libraries:
 - threads
 - threads::shared
 - forks
+- SUPER
 
 # REPOSITORY
 

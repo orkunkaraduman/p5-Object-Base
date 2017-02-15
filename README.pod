@@ -164,6 +164,10 @@ threads::shared
 
 forks
 
+=item *
+
+SUPER
+
 =back
 
 =head1 REPOSITORY

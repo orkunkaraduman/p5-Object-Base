@@ -5,7 +5,7 @@ Object::Base - Multi-threaded base class to establish a class deriving relations
 
 =head1 VERSION
 
-version 1.08
+version 1.09
 
 =head1 ABSTRACT
 
@@ -128,6 +128,14 @@ Inheritable
 
 Overridable
 
+=item *
+
+Redefinable
+
+=item *
+
+Not thread-safe
+
 =back
 
 =head3 Modifiers
@@ -210,7 +218,7 @@ use warnings;
 BEGIN
 {
 	require 5.008;
-	$Object::Base::VERSION = '1.08';
+	$Object::Base::VERSION = '1.09';
 	$Object::Base::ISA = ();
 }
 
@@ -300,10 +308,8 @@ sub attributes
 sub $_ :lvalue
 {
 	my \$self = shift;
-	die 'Attribute $_ is not defined in $caller' unless
-		defined(\$self) and
-		UNIVERSAL::isa(ref(\$self), '$package') and
-		\$${caller}::${context}{"$_"};
+	die 'Attribute $_ is not defined in $caller' unless \$${caller}::${context}{"$_"};
+	die 'Object is not derived from $package' unless defined(\$self) and UNIVERSAL::isa(ref(\$self), '$package');
 	my \@args = \@_;
 	if (\@args >= 1)
 	{
@@ -367,7 +373,7 @@ use warnings;
 BEGIN
 {
 	require 5.008;
-	$Object::Base::TieHash::VERSION = '1.08';
+	$Object::Base::TieHash::VERSION = $Object::Base::VERSION;
 }
 
 
@@ -388,15 +394,17 @@ sub STORE
 {
 	my $self = shift;
 	my ($key, $value) = @_;
-	return unless $key =~ /^[^\W\d]\w*\z/s;
-	$self->def($key);
-	my $attr = ${"$self->[1]::${context}"}{$key};
-	if (ref($attr) eq 'HASH' and exists($attr->{"setter"}))
+	if ($key =~ /^[^\W\d]\w*\z/s)
 	{
-		my $setter = $attr->{"setter"};
-		if (ref($setter) eq 'CODE')
+		$self->def($key);
+		my $attr = ${"$self->[1]::${context}"}{$key};
+		if (ref($attr) eq 'HASH' and exists($attr->{"setter"}))
 		{
-			$setter->(${$self->[2]}, $key, $value);
+			my $setter = $attr->{"setter"};
+			if (ref($setter) eq 'CODE')
+			{
+				$setter->(${$self->[2]}, $key, $value);
+			}
 		}
 	}
 	$self->[0]->{$key} = $value;
@@ -406,15 +414,17 @@ sub FETCH
 {
 	my $self = shift;
 	my ($key) = @_;
-	return unless $key =~ /^[^\W\d]\w*\z/s;
-	$self->def($key);
-	my $attr = ${"$self->[1]::${context}"}{$key};
-	if (ref($attr) eq 'HASH' and exists($attr->{"getter"}))
+	if ($key =~ /^[^\W\d]\w*\z/s)
 	{
-		my $getter = $attr->{"getter"};
-		if (ref($getter) eq 'CODE')
+		$self->def($key);
+		my $attr = ${"$self->[1]::${context}"}{$key};
+		if (ref($attr) eq 'HASH' and exists($attr->{"getter"}))
 		{
-			$self->[0]->{$key} = $getter->(${$self->[2]}, $key);
+			my $getter = $attr->{"getter"};
+			if (ref($getter) eq 'CODE')
+			{
+				$self->[0]->{$key} = $getter->(${$self->[2]}, $key);
+			}
 		}
 	}
 	$self->[0]->{$key};
@@ -486,6 +496,16 @@ __END__
 B<GitHub> L<https://github.com/orkunkaraduman/p5-Object-Base>
 
 B<CPAN> L<https://metacpan.org/release/Object-Base>
+
+=head1 SEE ALSO
+
+=over
+
+=item *
+
+L<Object::Exception|https://metacpan.org/pod/Object::Exception>
+
+=back
 
 =head1 AUTHOR
 
