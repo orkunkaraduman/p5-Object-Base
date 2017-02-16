@@ -5,7 +5,7 @@ Object::Base - Multi-threaded base class to establish a class deriving relations
 
 =head1 VERSION
 
-version 1.10
+version 1.11
 
 =head1 ABSTRACT
 
@@ -196,6 +196,7 @@ Attributes will be initialized with default values using default modifier at fir
 =cut
 BEGIN
 {
+	require Config;
 	if ($Config::Config{'useithreads'})
 	{
 		require threads;
@@ -218,7 +219,7 @@ use warnings;
 BEGIN
 {
 	require 5.008;
-	$Object::Base::VERSION = '1.10';
+	$Object::Base::VERSION = '1.11';
 	$Object::Base::ISA = ();
 }
 
@@ -239,6 +240,7 @@ sub import
 		<< "EOF",
 BEGIN
 {
+	require Config;
 	if (\$Config::Config{'useithreads'})
 	{
 		require threads;
@@ -351,6 +353,7 @@ sub DESTROY
 package Object::Base::TieHash;
 BEGIN
 {
+	require Config;
 	if ($Config::Config{'useithreads'})
 	{
 		require threads;
