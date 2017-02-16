@@ -5,7 +5,7 @@ Object::Base - Multi-threaded base class to establish a class deriving relations
 
 =head1 VERSION
 
-version 1.09
+version 1.10
 
 =head1 ABSTRACT
 
@@ -218,7 +218,7 @@ use warnings;
 BEGIN
 {
 	require 5.008;
-	$Object::Base::VERSION = '1.09';
+	$Object::Base::VERSION = '1.10';
 	$Object::Base::ISA = ();
 }
 
@@ -271,7 +271,7 @@ eval { require $_ };
 push \@${caller}::ISA, '$_';
 if ($_->isa('$package'))
 {
-	\$${caller}::${context}{\$_} = \$$_::${context}{\$_} for (keys \%$_::${context});
+	\$${caller}::${context}{\$_} = \$$_\::${context}{\$_} for (keys \%$_\::${context});
 }
 EOF
 			} @_
@@ -382,10 +382,10 @@ sub TIEHASH
 	my $class = shift;
 	my $self = [{}, @_, {}];
 	bless $self, $class;
-	for (grep /^[^\W\d]\w*\z/s, keys(%{"$self->[1]::${context}"}))
+	for (grep /^[^\W\d]\w*\z/s, keys(%{"$self->[1]\::${context}"}))
 	{
 		$self->[0]->{$_} = undef;
-		$self->def($_) unless ${"$self->[1]::${context}"}{":lazy"};
+		$self->def($_) unless ${"$self->[1]\::${context}"}{":lazy"};
 	}
 	$self;
 }
@@ -397,7 +397,7 @@ sub STORE
 	if ($key =~ /^[^\W\d]\w*\z/s)
 	{
 		$self->def($key);
-		my $attr = ${"$self->[1]::${context}"}{$key};
+		my $attr = ${"$self->[1]\::${context}"}{$key};
 		if (ref($attr) eq 'HASH' and exists($attr->{"setter"}))
 		{
 			my $setter = $attr->{"setter"};
@@ -417,7 +417,7 @@ sub FETCH
 	if ($key =~ /^[^\W\d]\w*\z/s)
 	{
 		$self->def($key);
-		my $attr = ${"$self->[1]::${context}"}{$key};
+		my $attr = ${"$self->[1]\::${context}"}{$key};
 		if (ref($attr) eq 'HASH' and exists($attr->{"getter"}))
 		{
 			my $getter = $attr->{"getter"};
@@ -470,7 +470,7 @@ sub def
 	unless (exists($self->[$#{$self}]->{$key}))
 	{
 		my $val = undef;
-		my $attr = ${"$self->[1]::${context}"}{$key};
+		my $attr = ${"$self->[1]\::${context}"}{$key};
 		if (ref($attr) eq 'HASH' and exists($attr->{"default"}))
 		{
 			my $default = $attr->{"default"};
