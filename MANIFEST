@@ -9,3 +9,4 @@ README
 README.md
 README.pod
 t/Object-Base.t
+t/Object-Exception.t
