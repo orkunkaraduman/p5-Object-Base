@@ -1,3 +1,6 @@
+1.12	2017-02-25
+		- POD changes
+
 1.11	2017-02-20
 		- Fixed bug for threads/forks switch
 		- Expanded tests

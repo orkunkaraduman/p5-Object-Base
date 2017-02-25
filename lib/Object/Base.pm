@@ -5,7 +5,7 @@ Object::Base - Multi-threaded base class to establish a class deriving relations
 
 =head1 VERSION
 
-version 1.11
+version 1.12
 
 =head1 ABSTRACT
 
@@ -132,10 +132,6 @@ Overridable
 
 Redefinable
 
-=item *
-
-Not thread-safe
-
 =back
 
 =head3 Modifiers
@@ -219,7 +215,7 @@ use warnings;
 BEGIN
 {
 	require 5.008;
-	$Object::Base::VERSION = '1.11';
+	$Object::Base::VERSION = '1.12';
 	$Object::Base::ISA = ();
 }
 
