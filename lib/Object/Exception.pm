@@ -5,7 +5,7 @@ Object::Exception - Multi-threaded base exception class
 
 =head1 VERSION
 
-version 1.09
+version 1.13
 
 =head1 ABSTRACT
 
@@ -13,48 +13,57 @@ Multi-threaded base exception class
 
 	package SampleException;
 	use Object::Base qw(Object::Exception);
-	
+	#
 	package main;
 	use Object::Exception;
-	
+	#
 	# Enable DEBUG for traceback
 	our $DEBUG = 1;
-	
+	#
 	# throws Object::Exception type and its msg: Exception1
-	eval {
+	eval
+	{
 		throw("Exception1");
 	};
-	if ($@) {
+	if ($@)
+	{
 		warn $@ if ref($@) eq "Object::Exception";
 	}
-	
+	#
 	# throws SampleException type and its msg: This is sample exception
-	sub sub_exception()
+	sub sub_exception
 	{
 		SampleException->throw("This is sample exception");
 	}
-	eval {
+	eval
+	{
 		sub_exception();
 	};
 	if ($@) {
 		# $@ and $@->message returns same result
 		warn $@->message if ref($@) eq "SampleException";
 	}
-	
+	#
 	# throws Object::Exception type and its message: SampleException. Because msg is not defined!
-	eval {
+	eval
+	{
 		SampleException->throw();
 	};
-	if ($@) {
+	if ($@)
+	{
 		if (ref($@) eq "SampleException")
 		{
-			warn $@
+			warn $@;
 		} else
 		{
 			# warns 'This is type of Object::Exception and its message: SampleException'
 			warn "This is type of ".ref($@)." and its message: $@";
 		}
 	}
+
+=head1 DESCRIPTION
+
+
 
 =cut
 use Object::Base qw(Exporter);
@@ -64,24 +73,14 @@ use overload '""' => \&message;
 BEGIN
 {
 	require 5.008;
-	$Object::Exception::VERSION = '1.09';
+	$Object::Exception::VERSION = '1.13';
 	@Object::Exception::EXPORT = qw(throw);
+	@Object::Exception::EXPORT_OK = qw(traceback dump_trace);
 }
 
 
 attributes qw(:shared msg debug trace);
 
-
-sub new
-{
-	my $class = shift;
-	my ($msg) = @_;
-	my $self = $class->SUPER();
-	$self->msg($msg);
-	$self->debug = (defined($main::DEBUG) and $main::DEBUG)? 1: 0;
-	$self->trace([]);
-	return $self;
-}
 
 sub traceback
 {
@@ -154,6 +153,18 @@ sub throw
 	}
 	$self->trace(\@trace);
 	die $self;
+}
+################################################################################
+
+sub new
+{
+	my $class = shift;
+	my ($msg) = @_;
+	my $self = $class->SUPER();
+	$self->msg($msg);
+	$self->debug = (defined($main::DEBUG) and $main::DEBUG)? 1: 0;
+	$self->trace([]);
+	return $self;
 }
 
 sub message
