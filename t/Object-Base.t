@@ -56,4 +56,4 @@ $bar->attr2--;
 is($bar->attr2, 18, '$bar->attr2 is 18');
 
 eval { $bar->attr1 = 4 };
-ok($@, '$bar->attr1 overrided and undefined');
+ok($@, '$bar->attr1 removed');

@@ -5,7 +5,7 @@ Object::Base - Multi-threaded base class to establish a class deriving relations
 
 =head1 VERSION
 
-version 1.12
+version 1.13
 
 =head1 ABSTRACT
 
@@ -14,7 +14,7 @@ Multi-threaded base class to establish a class deriving relationship with parent
 	package Foo;
 	use Object::Base;
 	attributes ':shared', 'attr1', 'attr2';
-	
+	#
 	package Bar;
 	use Object::Base 'Foo';
 	my $attr3_def = 6;
@@ -39,53 +39,53 @@ Multi-threaded base class to establish a class deriving relationship with parent
 			},
 		}
 	;
-	
+	#
 	package main;
 	use threads;
 	use threads::shared;
-	
+	#
 	# object of Foo
 	my $foo = Foo->new();
-	
+	#
 	# special attribute ':shared'
 	print "\$foo is ", is_shared($foo)? "shared": "not shared", "\n";
-	
+	#
 	# usage of attribute
 	$foo->attr1(1);
 	print $foo->attr1, "\n"; # prints '1'
-	
+	#
 	# attributes are lvalued
 	$foo->attr1++;
 	print $foo->attr1, "\n"; # prints '2'
-	
+	#
 	# assigning ref values to shared class attributes
 	eval { $foo->attr2 = { key1 => 'val1' } }; print "Eval: $@"; # prints error 'Eval: Invalid value for shared scalar at ...'
 	$foo->attr2({ key2 => 'val2' }); # uses shared_clone assigning ref value
 	print $foo->attr2->{key2}, "\n"; # prints 'val2'
-	
+	#
 	# object of derived class Bar
 	my $bar = Bar->new();
-	
+	#
 	# features are overridable
 	print "\$bar is ", is_shared($bar)? "shared": "not shared", "\n"; # prints '$bar is not shared'
-	
+	#
 	# attributes can be added derived classes
 	# attributes can have modifiers: default
 	print "attr3 default value is ", $bar->attr3, "\n"; # prints 'attr3 default value is 6'
-	
+	#
 	# attributes can have modifiers: setter
 	$bar->attr3 = 3;
 	print "attr3 set", "\n";
-	
+	#
 	# attributes can have modifiers: getter
 	print "attr3 value ", $bar->attr3, " and stored as $attr3_val", "\n"; # prints 'attr3 value 3 and stored as 2'
-	
+	#
 	# attributes are inheritable
 	$bar->attr1(3);
-	
+	#
 	# attributes are overridable
 	eval { $bar->attr2 = 4 }; print "Eval: $@"; # prints error 'Eval: Attribute attr2 is not defined in Bar at ...'
-	
+	#
 	# attributes in thread
 	my $thr1 = threads->create(sub { $foo->attr1 = 5; $bar->attr1 = 5; });
 	my $thr2 = threads->create(sub { sleep 1; print "\$foo is shared and attr1: ", $foo->attr1, ", \$bar is not shared and attr1: ", $bar->attr1, "\n"; });
@@ -215,7 +215,7 @@ use warnings;
 BEGIN
 {
 	require 5.008;
-	$Object::Base::VERSION = '1.12';
+	$Object::Base::VERSION = '1.13';
 	$Object::Base::ISA = ();
 }
 

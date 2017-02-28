@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
 	NAME				=> 'Object::Base',
-	VERSION				=> '1.12',
+	VERSION				=> '1.13',
 	MIN_PERL_VERSION	=> '5.008',
 	PREREQ_PM			=> {
 		'threads'		=> '1.72',
@@ -16,7 +16,7 @@ WriteMakefile(
 	EXE_FILES			=> [qw(
 	)],
 	AUTHOR				=> 'Orkun Karaduman <orkunkaraduman@gmail.com>',
-	ABSTRACT			=> 'Multi-threaded base class to establish a class deriving relationship with parent classes',
+	ABSTRACT			=> 'Multi-threaded base class and exception class',
 	LICENSE				=> 'gpl_3',
 	META_MERGE			=> {
 		'meta-spec'		=> {
