@@ -1,7 +1,7 @@
 package Object::Exception;
 =head1 NAME
 
-Object::Exception - Multi-threaded base exception class
+Object::Exception - Multi-threaded exception class
 
 =head1 VERSION
 
@@ -9,7 +9,7 @@ version 1.13
 
 =head1 ABSTRACT
 
-Multi-threaded base exception class
+Multi-threaded exception class
 
 	package SampleException;
 	use Object::Base qw(Object::Exception);

@@ -8,7 +8,7 @@ See more [https://metacpan.org/pod/Object::Base](https://metacpan.org/pod/Object
 
 ## Object::Exception
 
-Multi-threaded base exception class
+Multi-threaded exception class
 
 See more [https://metacpan.org/pod/Object::Exception](https://metacpan.org/pod/Object::Exception)
 
