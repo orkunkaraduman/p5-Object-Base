@@ -1,10 +1,12 @@
-=head1 Object::Base
+=head1 MODULES
+
+=head2 Object::Base
 
 Multi-threaded base class to establish a class deriving relationship with parent classes
 
 See more L<https://metacpan.org/pod/Object::Base>
 
-=head1 Object::Exception
+=head2 Object::Exception
 
 Multi-threaded base exception class
 
