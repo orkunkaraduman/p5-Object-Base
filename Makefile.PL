@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
 	NAME				=> 'Object::Base',
-	VERSION				=> '1.13',
+	VERSION				=> '1.14',
 	MIN_PERL_VERSION	=> '5.008',
 	PREREQ_PM			=> {
 		'threads'		=> '1.72',
@@ -22,7 +22,7 @@ WriteMakefile(
 		'meta-spec'		=> {
 			version		=> 2,
 		},
-		resources => {
+		resources		=> {
 			homepage	=> 'https://metacpan.org/release/Object-Base',
 			license		=> 'https://www.gnu.org/licenses/gpl-3.0.html',
 			repository	=> {
