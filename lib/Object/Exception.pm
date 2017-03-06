@@ -90,7 +90,7 @@ If $object->debug attribute is TRUE, dump generated with dump_trace is added to 
 
 =head3 $class->throw($msg)
 
-dies with new Object::Exception derived-class instance with specified message. If instance is not derived from Object::Exception,
+dies with new Object::Exception derived-class instance with specified message. If B<$class> is not derived from Object::Exception,
 does nothing. $msg value must be specified explicitly and it can be B<undef>. Otherwise, method runs as B<throw($class)> function.
 
 =cut
@@ -191,7 +191,7 @@ sub new
 	my ($msg) = @_;
 	my $self = $class->SUPER();
 	$self->msg($msg);
-	$self->debug = (defined($main::DEBUG) and $main::DEBUG)? 1: 0;
+	$self->debug((defined($main::DEBUG) and $main::DEBUG)? 1: 0);
 	$self->trace([]);
 	return $self;
 }
