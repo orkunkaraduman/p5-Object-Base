@@ -5,7 +5,7 @@ Object::Exception - Multi-threaded exception class
 
 =head1 VERSION
 
-version 1.13
+version 1.14
 
 =head1 ABSTRACT
 
@@ -71,7 +71,7 @@ returns array specified level of traceback by calling point of traceback functio
 
 =head3 dump_trace(@trace)
 
-returns string dump of trace array. Always ends with EOL ($/) generally "\n".
+returns string dump of trace array. Always ends with "\n".
 
 =head3 throw($msg)
 
@@ -85,12 +85,12 @@ returns new Object::Exception instance with specified message. If $main::DEBUG i
 
 =head3 $object->message()
 
-returns message of Object::Exception instance. If $msg is defined with new() or throw(), always ends with EOL ($/) generally "\n".
+returns message of Object::Exception instance. If $msg is defined with new() or throw(), always ends with "\n".
 If $object->debug attribute is TRUE, dump generated with dump_trace is added to end of message.
 
 =head3 $class->throw($msg)
 
-dies with new Object::Exception derived-class instance with specified message. If instance is not derived from Object::Exception,
+dies with new Object::Exception derived-class instance with specified message. If B<$class> is not derived from Object::Exception,
 does nothing. $msg value must be specified explicitly and it can be B<undef>. Otherwise, method runs as B<throw($class)> function.
 
 =cut
@@ -101,7 +101,7 @@ use overload '""' => \&message;
 BEGIN
 {
 	require 5.008;
-	$Object::Exception::VERSION = '1.13';
+	$Object::Exception::VERSION = '1.14';
 	@Object::Exception::EXPORT = qw(throw);
 	@Object::Exception::EXPORT_OK = qw(traceback dump_trace);
 }
@@ -130,7 +130,6 @@ sub traceback
 
 sub dump_trace
 {
-	local $/ = "\n" unless defined($/);
 	my @trace = @_;
 	my $result = "";
 	my $i = 1;
@@ -141,7 +140,7 @@ sub dump_trace
 		$result .= "at ";
 		$result .= "$trace->{subroutine} " if defined($trace->{subroutine});
 		$result .= "$trace->{filename} ";
-		$result .= "line $trace->{line}$/";
+		$result .= "line $trace->{line}\n";
 	} continue
 	{
 		$i++;
@@ -191,20 +190,19 @@ sub new
 	my ($msg) = @_;
 	my $self = $class->SUPER();
 	$self->msg($msg);
-	$self->debug = (defined($main::DEBUG) and $main::DEBUG)? 1: 0;
+	$self->debug((defined($main::DEBUG) and $main::DEBUG)? 1: 0);
 	$self->trace([]);
 	return $self;
 }
 
 sub message
 {
-	local $/ = "\n" unless defined($/);
 	my $self = shift;
 	my ($debug) = @_;
 	$debug = $self->debug unless defined($debug);
 	my $msg = $self->msg;
 	my $result = "";
-	$result .= "$msg$/" if defined($msg) and not ref($msg);
+	$result .= "$msg\n" if defined($msg) and not ref($msg);
 	return $result unless $debug;
 	$result .= dump_trace(@{$self->trace});
 	return $result;
