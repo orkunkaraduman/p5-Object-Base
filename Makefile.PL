@@ -6,7 +6,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
 	NAME				=> 'Object::Base',
 	VERSION				=> '1.14',
-	MIN_PERL_VERSION	=> '5.008',
+	MIN_PERL_VERSION	=> '5.008008',
 	PREREQ_PM			=> {
 		'threads'		=> '1.72',
 		'threads::shared' => '1.28',
