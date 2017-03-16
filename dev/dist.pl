@@ -23,7 +23,7 @@ use Cwd;
 
 
 #my $podPath = "lib/" . "Object::Base" =~ s/\:\:/\//gr . ".pm";
-my $podPath = "README.pod";
+my $podPath = "doc/README.pod";
 my $base = "${FindBin::Bin}/..";
 cwd($base);
 

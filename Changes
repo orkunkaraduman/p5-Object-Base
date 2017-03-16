@@ -1,3 +1,6 @@
+1.15	2017-03-16
+		- README.pod moved in doc
+
 1.14	2017-03-06
 		- POD fixes
 		- Minimum Perl version setted v5.8.8
