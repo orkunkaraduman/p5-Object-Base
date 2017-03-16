@@ -1,4 +1,6 @@
 Changes
+COPYRIGHT
+doc/README.pod
 lib/Object/Base.pm
 lib/Object/Exception.pm
 LICENSE
@@ -7,6 +9,5 @@ MANIFEST			This list of files
 MANIFEST.SKIP
 README
 README.md
-README.pod
 t/Object-Base.t
 t/Object-Exception.t
